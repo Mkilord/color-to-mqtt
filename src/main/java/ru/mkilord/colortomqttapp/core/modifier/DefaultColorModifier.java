@@ -29,9 +29,17 @@ public class DefaultColorModifier implements ColorModifier {
         return Math.min(Math.max(0, modifiedValue), max);
     }
 
+    /**
+     * Тон круговой: 350 + 20 дает 10, а не 360.
+     */
+    private static float shiftHue(float hue, float shift) {
+        float shifted = (hue + shift) % 360;
+        return shifted < 0 ? shifted + 360 : shifted;
+    }
+
     @Override
     public HSBColor modify(HSBColor color) {
-        var h = applyModifyFor(color.getHue(), modifyHue, 360);
+        var h = shiftHue(color.getHue(), modifyHue);
         var s = applyModifyFor(color.getSaturation(), modifySaturation, 100);
         var b = applyModifyFor(color.getBrightness(), modifyBrightness, 100);
         return new HSBColor(h, s, b);

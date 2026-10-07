@@ -15,8 +15,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
 function start() {
     fetch('/start', {method: 'POST'})
-        .then(response => response.text())
-        .then((message) => {
+        .then(response => response.text().then(message => ({ok: response.ok, message})))
+        .then(({ok, message}) => {
+            if (!ok) {
+                setStopState();
+                showNotification(message, 'error');
+                return;
+            }
             setStartState()
             showNotification(message, 'success');
             updateColorLoop()

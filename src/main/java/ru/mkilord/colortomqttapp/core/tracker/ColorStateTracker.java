@@ -4,17 +4,24 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.FieldDefaults;
 
-import java.awt.*;
+import java.awt.Color;
 
 import static lombok.AccessLevel.PRIVATE;
 
+/**
+ * Помнит последний отправленный цвет и решает, достаточно ли изменился новый.
+ * Цвет пишет поток захвата, а читает веб-запрос, поэтому поле volatile.
+ */
 @Setter
 @Getter
 @FieldDefaults(level = PRIVATE)
 public abstract class ColorStateTracker {
+    public static final String STATE_TRACKER_KEY = "stateTracker";
 
-    public static String STATE_TRACKER_KEY = "stateTracker";
-    Color currentColor = Color.BLACK;
+    volatile Color currentColor = Color.BLACK;
 
+    /**
+     * @return true, если цвет изменился; новый цвет при этом запоминается
+     */
     public abstract boolean hasColorChanged(Color color);
 }

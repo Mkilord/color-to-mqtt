@@ -1,22 +1,19 @@
 package ru.mkilord.colortomqttapp.core.tracker;
 
-import lombok.experimental.FieldDefaults;
-
-import java.awt.*;
+import java.awt.Color;
 import java.util.Objects;
 
-import static lombok.AccessLevel.PRIVATE;
-
-@FieldDefaults(level = PRIVATE)
+/**
+ * Считает изменением любое отличие цвета.
+ */
 public final class SimpleColorStateTracker extends ColorStateTracker {
-
-    Color currentColor = Color.BLACK;
 
     @Override
     public boolean hasColorChanged(Color color) {
-        var hasChanged = !Objects.equals(currentColor, color);
-        if (hasChanged) this.currentColor = color;
+        var hasChanged = !Objects.equals(getCurrentColor(), color);
+        if (hasChanged) {
+            setCurrentColor(color);
+        }
         return hasChanged;
     }
-
 }

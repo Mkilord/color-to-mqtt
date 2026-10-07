@@ -31,8 +31,13 @@ public class MainController {
 
     @PostMapping("/start")
     public ResponseEntity<String> startColorDetection() {
-        colorService.start();
-        return ResponseEntity.ok("Успешно запущено!");
+        try {
+            colorService.start();
+            return ResponseEntity.ok("Успешно запущено!");
+        } catch (RuntimeException e) {
+            log.error("Не удалось запустить захват цвета", e);
+            return ResponseEntity.internalServerError().body("Не удалось запустить: " + e.getMessage());
+        }
     }
 
     @PostMapping("/stop")

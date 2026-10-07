@@ -9,7 +9,7 @@ import java.util.Properties;
 public final class AbstractFactory<T> {
     public T get(String key, Properties config) {
         var className = config.getProperty(key);
-        log.error("Creating " + key);
+        log.debug("Creating {}", key);
         if (className == null || className.isEmpty()) {
             throw new IllegalArgumentException("Class with name:" + className + " for the factory is missing or empty in the config.");
         }

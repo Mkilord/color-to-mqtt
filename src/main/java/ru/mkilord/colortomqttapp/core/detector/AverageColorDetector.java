@@ -36,6 +36,11 @@ public final class AverageColorDetector implements ColorDetector {
             rgbCount.count++;
         });
 
+        if (rgbCount.count == 0) {
+            // Область меньше клетки сетки: берем центральный пиксель.
+            return new Color(image.getRGB(image.getWidth() / 2, image.getHeight() / 2));
+        }
+
         var averageRed = (int) (rgbCount.red / rgbCount.count);
         var averageGreen = (int) (rgbCount.green / rgbCount.count);
         var averageBlue = (int) (rgbCount.blue / rgbCount.count);

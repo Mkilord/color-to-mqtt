@@ -1,7 +1,7 @@
 package ru.mkilord.colortomqttapp.service.impl;
 
+import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
-import lombok.experimental.FieldDefaults;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
 import ru.mkilord.colortomqttapp.core.AbstractFactory;
@@ -19,75 +19,95 @@ import ru.mkilord.colortomqttapp.core.tracker.ColorStateTracker;
 import ru.mkilord.colortomqttapp.service.ColorService;
 import ru.mkilord.colortomqttapp.service.SettingsService;
 
-import java.awt.*;
+import java.awt.Color;
+import java.util.Properties;
 
-import static lombok.AccessLevel.PRIVATE;
-
+/**
+ * Цикл захвата: снимок области, средний цвет, проверка изменения, сдвиг, ограничения, публикация.
+ * Все компоненты цикла создаются при запуске по актуальным настройкам и закрываются при остановке.
+ */
 @Service
 @Log4j2
-@FieldDefaults(level = PRIVATE)
 @RequiredArgsConstructor
-public final class ColorServiceImpl implements ColorService {
+public class ColorServiceImpl implements ColorService {
 
-    final SettingsService settingsService;
+    private final SettingsService settingsService;
 
-    RepeatServiceImpl repeatServiceImpl;
-    ScreenShooter screenShooter;
-
-    ColorDetector colorDetector;
-    ColorStateTracker colorTracker;
-    ColorLimit colorLimit;
-    ColorPublisher colorPublisher;
-    ColorModifier colorModifier;
-
-    boolean isStarted;
+    private Pipeline pipeline;
 
     @Override
-    public boolean isStart() {
-        return isStarted;
+    public synchronized boolean isStart() {
+        return pipeline != null;
     }
 
-    public void start() {
-        bind();
-        isStarted = true;
-        repeatServiceImpl.repeat(this::process);
+    @Override
+    public synchronized void start() {
+        if (pipeline != null) {
+            return;
+        }
+        pipeline = new Pipeline(settingsService.loadOrElseLoadDefault());
+        pipeline.start();
+        log.info("Захват цвета запущен");
     }
 
-    public void stop() {
-        isStarted = false;
-        if (repeatServiceImpl != null) {
-            repeatServiceImpl.stop();
+    @Override
+    @PreDestroy
+    public synchronized void stop() {
+        if (pipeline == null) {
+            return;
+        }
+        pipeline.stop();
+        pipeline = null;
+        log.info("Захват цвета остановлен");
+    }
+
+    @Override
+    public synchronized void restartIfRunning() {
+        if (pipeline != null) {
+            stop();
+            start();
         }
     }
 
-    public Color getCurrentColor() {
-        return colorTracker.getCurrentColor();
+    @Override
+    public synchronized Color getCurrentColor() {
+        return pipeline == null ? Color.BLACK : pipeline.tracker.getCurrentColor();
     }
 
-    private void bind() {
-        var properties = settingsService.loadOrElseLoadDefault();
+    private static final class Pipeline {
+        private final ScreenShooter screenShooter;
+        private final ColorDetector detector;
+        private final ColorStateTracker tracker;
+        private final ColorModifier modifier;
+        private final ColorLimit limit;
+        private final ColorPublisher publisher;
+        private final RepeatServiceImpl repeater;
 
-        this.colorModifier = new DefaultColorModifier(properties);
-        this.screenShooter = new DefaultScreenShooter(properties);
-        this.colorDetector = new AbstractFactory<ColorDetector>().get(ColorDetector.DETECTOR_KEY, properties);
-        this.colorLimit = new DefaultColorLimit(properties);
-        this.colorPublisher = new MQTTColorPublisher(properties);
-        this.colorTracker = new AbstractFactory<ColorStateTracker>().get(ColorStateTracker.STATE_TRACKER_KEY, properties);
-        this.repeatServiceImpl = new RepeatServiceImpl(properties);
-    }
+        Pipeline(Properties properties) {
+            this.screenShooter = new DefaultScreenShooter(properties);
+            this.detector = new AbstractFactory<ColorDetector>().get(ColorDetector.DETECTOR_KEY, properties);
+            this.tracker = new AbstractFactory<ColorStateTracker>().get(ColorStateTracker.STATE_TRACKER_KEY, properties);
+            this.modifier = new DefaultColorModifier(properties);
+            this.limit = new DefaultColorLimit(properties);
+            this.publisher = new MQTTColorPublisher(properties);
+            this.repeater = new RepeatServiceImpl(properties);
+        }
 
-    private void process() {
-        var color = colorDetector.detect(screenShooter.getScreenshot());
-        if (hasColorChanged(color)) applyLimitAndPublish(new HSBColor(color));
-    }
+        void start() {
+            repeater.repeat(this::processFrame);
+        }
 
-    private boolean hasColorChanged(Color color) {
-        return colorTracker.hasColorChanged(color);
-    }
+        void stop() {
+            repeater.stop();
+            publisher.close();
+        }
 
-    private void applyLimitAndPublish(HSBColor hsbColor) {
-        hsbColor = colorModifier.modify(hsbColor);
-        hsbColor = colorLimit.applyFor(hsbColor);
-        colorPublisher.publish(hsbColor);
+        private void processFrame() {
+            var color = detector.detect(screenShooter.getScreenshot());
+            if (tracker.hasColorChanged(color)) {
+                var hsb = limit.applyFor(modifier.modify(new HSBColor(color)));
+                publisher.publish(hsb);
+            }
+        }
     }
 }

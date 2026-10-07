@@ -22,9 +22,16 @@ public final class DefaultScreenArea implements ScreenArea {
 
     @Override
     public Rectangle getScreenArea() {
-        var resolution = Toolkit.getDefaultToolkit().getScreenSize();
-        var x = (resolution.width - size.width) / 2;
-        var y = (resolution.height - size.height) / 2;
-        return new Rectangle(x, y, size.width, size.height);
+        return centered(Toolkit.getDefaultToolkit().getScreenSize(), size);
+    }
+
+    /**
+     * Прямоугольник заданного размера по центру экрана. Если область больше экрана,
+     * она обрезается до его размеров.
+     */
+    static Rectangle centered(Dimension screen, Dimension area) {
+        var width = Math.min(area.width, screen.width);
+        var height = Math.min(area.height, screen.height);
+        return new Rectangle((screen.width - width) / 2, (screen.height - height) / 2, width, height);
     }
 }

@@ -1,16 +1,18 @@
 package ru.mkilord.colortomqttapp.service;
 
-import org.springframework.stereotype.Service;
+import java.awt.Color;
 
-import java.awt.*;
-
-@Service
 public interface ColorService {
     boolean isStart();
 
     void start();
 
     void stop();
+
+    /**
+     * Перезапускает захват с актуальными настройками, если он был запущен.
+     */
+    void restartIfRunning();
 
     Color getCurrentColor();
 }

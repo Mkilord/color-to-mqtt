@@ -1,21 +1,19 @@
 package ru.mkilord.colortomqttapp.core.tracker;
 
-import lombok.experimental.FieldDefaults;
 import lombok.extern.log4j.Log4j2;
 
-import java.awt.*;
+import java.awt.Color;
 import java.util.Properties;
 
-import static lombok.AccessLevel.PRIVATE;
-
+/**
+ * Считает изменением евклидово расстояние в RGB больше порога
+ * {@code sensitivity} процентов от 255.
+ */
 @Log4j2
-@FieldDefaults(level = PRIVATE)
 public final class DefaultColorStateTracker extends ColorStateTracker {
-
     public static final String SENSITIVITY_KEY = "sensitivity";
-    final int sensitivity;
 
-    Color curColor = Color.BLACK;
+    private final int sensitivity;
 
     public DefaultColorStateTracker(Properties props) {
         this.sensitivity = Integer.parseInt(props.getProperty(SENSITIVITY_KEY));
@@ -25,26 +23,18 @@ public final class DefaultColorStateTracker extends ColorStateTracker {
     }
 
     @Override
-    public Color getCurrentColor() {
-        return curColor;
-    }
-
     public boolean hasColorChanged(Color newColor) {
-
-        var deltaRed = curColor.getRed() - newColor.getRed();
-        var deltaGreen = curColor.getGreen() - newColor.getGreen();
-        var deltaBlue = curColor.getBlue() - newColor.getBlue();
-
+        var current = getCurrentColor();
+        var deltaRed = current.getRed() - newColor.getRed();
+        var deltaGreen = current.getGreen() - newColor.getGreen();
+        var deltaBlue = current.getBlue() - newColor.getBlue();
         var colorDifference = Math.sqrt(deltaRed * deltaRed + deltaGreen * deltaGreen + deltaBlue * deltaBlue);
-
         var threshold = (255 * sensitivity) / 100.0;
-
         if (colorDifference > threshold) {
-            this.curColor = newColor;
-            log.debug("Color has change to: {};", newColor.toString());
+            setCurrentColor(newColor);
+            log.debug("Color has change to: {};", newColor);
             return true;
         }
         return false;
     }
 }
-

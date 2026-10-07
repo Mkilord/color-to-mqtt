@@ -1,6 +1,5 @@
 package ru.mkilord.colortomqttapp.core.publisher;
 
-import lombok.Getter;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.paho.client.mqttv3.MqttClient;
@@ -10,65 +9,84 @@ import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 import ru.mkilord.colortomqttapp.core.HSBColor;
 
+import java.util.Locale;
 import java.util.Properties;
 
 import static lombok.AccessLevel.PRIVATE;
 
+/**
+ * Публикует цвет в MQTT. Одно соединение на весь сеанс захвата: при обрыве
+ * Paho переподключается сам, а сообщения на время обрыва пропускаются.
+ */
 @Slf4j
-@FieldDefaults(level = PRIVATE)
+@FieldDefaults(level = PRIVATE, makeFinal = true)
 public final class MQTTColorPublisher implements ColorPublisher {
-    final String broker, topic, username, password;
-    @Getter
+
+    String topic;
     MqttClient client;
 
     public MQTTColorPublisher(Properties properties) {
-        this.broker = properties.getProperty("broker");
-        this.username = properties.getProperty("username");
-        this.password = properties.getProperty("password");
         this.topic = properties.getProperty("topic");
-        compileOptionAndTryConnect();
+        var broker = properties.getProperty("broker");
+        try {
+            this.client = new MqttClient(broker, MqttClient.generateClientId(), new MemoryPersistence());
+        } catch (MqttException e) {
+            throw new IllegalArgumentException("Некорректный адрес MQTT-брокера: " + broker, e);
+        }
+        connect(createOptions(properties.getProperty("username"), properties.getProperty("password")), broker);
     }
 
     @Override
     public void publish(HSBColor color) {
-        var message = createMessage(color);
-        tryPublish(message);
-    }
-
-    private void tryPublish(MqttMessage message) {
+        if (!client.isConnected()) {
+            log.debug("Нет соединения с брокером, сообщение пропущено");
+            return;
+        }
         try {
-            client.publish(topic, message);
+            client.publish(topic, createMessage(color));
         } catch (MqttException e) {
-            compileOptionAndTryConnect();
-            log.error("Error sending message!", e);
+            log.warn("Не удалось отправить цвет: {}", e.getMessage());
         }
     }
 
-    private MqttMessage createMessage(HSBColor color) {
-        var strMessage = """
-                {"hue":%.0f,"sat":%.0f,"brightness":%.0f}"""
-                .formatted(color.getHue(), color.getSaturation(), color.getBrightness());
-        log.debug(strMessage);
-        var message = new MqttMessage(strMessage.getBytes());
+    @Override
+    public void close() {
+        try {
+            if (client.isConnected()) {
+                client.disconnect();
+            }
+            client.close();
+        } catch (MqttException e) {
+            log.warn("Ошибка при закрытии соединения с брокером: {}", e.getMessage());
+        }
+    }
+
+    static MqttMessage createMessage(HSBColor color) {
+        var payload = String.format(Locale.ROOT, "{\"hue\":%.0f,\"sat\":%.0f,\"brightness\":%.0f}",
+                color.getHue(), color.getSaturation(), color.getBrightness());
+        var message = new MqttMessage(payload.getBytes());
         message.setQos(0);
         return message;
     }
 
-    private void compileOptionAndTryConnect() {
+    private static MqttConnectOptions createOptions(String username, String password) {
         var options = new MqttConnectOptions();
-        options.setCleanSession(false);
-        options.setUserName(username);
-        options.setPassword(password.toCharArray());
-        tryConnect(options);
+        options.setCleanSession(true);
+        options.setAutomaticReconnect(true);
+        options.setConnectionTimeout(5);
+        if (username != null && !username.isBlank()) {
+            options.setUserName(username);
+            options.setPassword(password == null ? new char[0] : password.toCharArray());
+        }
+        return options;
     }
 
-    private void tryConnect(MqttConnectOptions options) {
+    private void connect(MqttConnectOptions options, String broker) {
         try {
-            client = new MqttClient(broker, MqttClient.generateClientId(), new MemoryPersistence());
             client.connect(options);
-            log.info("Connected to broker: " + broker);
+            log.info("Подключено к брокеру {}", broker);
         } catch (MqttException e) {
-            log.error(e.getMessage());
+            log.error("Не удалось подключиться к брокеру {}: {}", broker, e.getMessage());
         }
     }
 }
