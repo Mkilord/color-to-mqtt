@@ -57,4 +57,57 @@ class SettingsFormTest {
         assertThat(props.getProperty("modifyHue")).isEqualTo("-15.0");
         assertThat(SettingsForm.from(props)).isEqualTo(form);
     }
+
+    @Test
+    void passwordIsNeverExposedButItsPresenceIs() {
+        var props = TestProperties.defaults();
+        props.setProperty("username", "lamp");
+        props.setProperty("password", "secret");
+
+        var form = SettingsForm.from(props);
+
+        assertThat(form.getUsername()).isEqualTo("lamp");
+        assertThat(form.getPassword()).isNullOrEmpty();
+        assertThat(form.isPasswordSet()).isTrue();
+    }
+
+    @Test
+    void emptyPasswordKeepsSavedOne() {
+        var props = TestProperties.defaults();
+        props.setProperty("username", "lamp");
+        props.setProperty("password", "secret");
+        var form = SettingsForm.from(props);
+        form.setPassword("");
+
+        form.applyTo(props);
+
+        assertThat(props.getProperty("password")).isEqualTo("secret");
+    }
+
+    @Test
+    void newPasswordReplacesSavedOne() {
+        var props = TestProperties.defaults();
+        props.setProperty("username", "lamp");
+        props.setProperty("password", "secret");
+        var form = SettingsForm.from(props);
+        form.setPassword("other");
+
+        form.applyTo(props);
+
+        assertThat(props.getProperty("password")).isEqualTo("other");
+    }
+
+    @Test
+    void clearingUsernameDropsPassword() {
+        var props = TestProperties.defaults();
+        props.setProperty("username", "lamp");
+        props.setProperty("password", "secret");
+        var form = SettingsForm.from(props);
+        form.setUsername("  ");
+
+        form.applyTo(props);
+
+        assertThat(props.getProperty("username")).isEmpty();
+        assertThat(props.getProperty("password")).isEmpty();
+    }
 }

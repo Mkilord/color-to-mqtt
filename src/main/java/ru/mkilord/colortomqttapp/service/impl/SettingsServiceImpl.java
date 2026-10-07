@@ -15,7 +15,6 @@ import java.io.OutputStreamWriter;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.Properties;
-import java.util.Set;
 
 import static lombok.AccessLevel.PRIVATE;
 
@@ -25,11 +24,6 @@ import static lombok.AccessLevel.PRIVATE;
 @FieldDefaults(level = PRIVATE, makeFinal = true)
 public final class SettingsServiceImpl implements SettingsService {
 
-    /**
-     * Учетные данные MQTT берутся только из конфигурации и в файл не пишутся.
-     */
-    static Set<String> NOT_SAVED_KEYS = Set.of("username", "password");
-
     SettingsConfig config;
 
     @Override
@@ -37,7 +31,6 @@ public final class SettingsServiceImpl implements SettingsService {
         var propertiesFile = config.getSettingsFilePath();
         var toSave = new Properties();
         toSave.putAll(editedProperties);
-        NOT_SAVED_KEYS.forEach(toSave::remove);
 
         try (var fos = new OutputStreamWriter(new FileOutputStream(propertiesFile.toFile()), StandardCharsets.UTF_8)) {
             toSave.store(fos, "Application settings");
@@ -68,11 +61,7 @@ public final class SettingsServiceImpl implements SettingsService {
         var properties = loadDefault();
         log.debug("Loading properties from file {}", settingsFilePath);
         try {
-            load().forEach((key, value) -> {
-                if (!NOT_SAVED_KEYS.contains(key)) {
-                    properties.put(key, value);
-                }
-            });
+            properties.putAll(load());
         } catch (IOException e) {
             log.warn("Could not load properties from file {}, using defaults", settingsFilePath);
         }

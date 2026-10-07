@@ -1,5 +1,6 @@
 package ru.mkilord.colortomqttapp.controller;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -20,6 +21,7 @@ import java.util.Properties;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.not;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -51,6 +53,12 @@ class SettingsControllerTest {
     private SettingsService settingsService;
     @MockitoBean
     private ColorService colorService;
+
+    @BeforeEach
+    void resetProperties() {
+        properties.clear();
+        properties.putAll(TestProperties.defaults());
+    }
 
     @Test
     void showsCurrentSettings() throws Exception {
@@ -89,6 +97,38 @@ class SettingsControllerTest {
         mvc.perform(post("/settings/reset")).andExpect(redirectedUrl("/settings"));
 
         verify(colorService).restartIfRunning();
+    }
+
+    @Test
+    void savedPasswordIsNotRenderedOnPage() throws Exception {
+        properties.setProperty("username", "lamp");
+        properties.setProperty("password", "very-secret-value");
+
+        mvc.perform(get("/settings"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("lamp")))
+                .andExpect(content().string(not(containsString("very-secret-value"))));
+    }
+
+    @Test
+    void emptyPasswordFieldKeepsSavedPassword() throws Exception {
+        properties.setProperty("username", "lamp");
+        properties.setProperty("password", "secret");
+
+        mvc.perform(formPost("username", "lamp", "password", ""))
+                .andExpect(redirectedUrl("/settings"));
+
+        assertThat(properties.getProperty("username")).isEqualTo("lamp");
+        assertThat(properties.getProperty("password")).isEqualTo("secret");
+    }
+
+    @Test
+    void credentialsFromFormAreSaved() throws Exception {
+        mvc.perform(formPost("username", "lamp", "password", "pa55"))
+                .andExpect(redirectedUrl("/settings"));
+
+        assertThat(properties.getProperty("username")).isEqualTo("lamp");
+        assertThat(properties.getProperty("password")).isEqualTo("pa55");
     }
 
     /**

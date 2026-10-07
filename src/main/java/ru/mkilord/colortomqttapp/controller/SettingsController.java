@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import ru.mkilord.colortomqttapp.controller.form.SettingsForm;
 import ru.mkilord.colortomqttapp.service.ColorService;
@@ -38,9 +39,22 @@ public class SettingsController {
         return SettingsForm.TRACKERS;
     }
 
+    /**
+     * Снимок области захвата. Размер можно передать параметрами, чтобы показать
+     * еще не сохраненные значения из формы.
+     */
     @GetMapping("/preview_image")
-    public ResponseEntity<byte[]> previewImage() {
-        var screenRenderService = new ScreenRenderServiceImpl(prop);
+    public ResponseEntity<byte[]> previewImage(@RequestParam(required = false) Integer width,
+                                               @RequestParam(required = false) Integer height) {
+        var settings = new Properties();
+        settings.putAll(prop);
+        if (width != null && width > 0 && width <= 10_000) {
+            settings.setProperty("screenWight", String.valueOf(width));
+        }
+        if (height != null && height > 0 && height <= 10_000) {
+            settings.setProperty("screenHeight", String.valueOf(height));
+        }
+        var screenRenderService = new ScreenRenderServiceImpl(settings);
         return ResponseEntity.ok().contentType(MediaType.IMAGE_JPEG).body(screenRenderService.getRenderedImage());
     }
 

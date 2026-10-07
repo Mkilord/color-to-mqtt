@@ -15,4 +15,6 @@ public interface ColorService {
     void restartIfRunning();
 
     Color getCurrentColor();
+
+    ColorStatus getStatus();
 }

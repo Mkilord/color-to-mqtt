@@ -17,9 +17,11 @@ import ru.mkilord.colortomqttapp.core.screenshoter.DefaultScreenShooter;
 import ru.mkilord.colortomqttapp.core.screenshoter.ScreenShooter;
 import ru.mkilord.colortomqttapp.core.tracker.ColorStateTracker;
 import ru.mkilord.colortomqttapp.service.ColorService;
+import ru.mkilord.colortomqttapp.service.ColorStatus;
 import ru.mkilord.colortomqttapp.service.SettingsService;
 
 import java.awt.Color;
+import java.time.Instant;
 import java.util.Properties;
 
 /**
@@ -34,6 +36,7 @@ public class ColorServiceImpl implements ColorService {
     private final SettingsService settingsService;
 
     private Pipeline pipeline;
+    private volatile Failure startFailure;
 
     @Override
     public synchronized boolean isStart() {
@@ -45,7 +48,13 @@ public class ColorServiceImpl implements ColorService {
         if (pipeline != null) {
             return;
         }
-        pipeline = new Pipeline(settingsService.loadOrElseLoadDefault());
+        try {
+            pipeline = new Pipeline(settingsService.loadOrElseLoadDefault());
+        } catch (RuntimeException e) {
+            startFailure = new Failure("Не удалось запустить захват: " + e.getMessage(), Instant.now());
+            throw e;
+        }
+        startFailure = null;
         pipeline.start();
         log.info("Захват цвета запущен");
     }
@@ -74,7 +83,30 @@ public class ColorServiceImpl implements ColorService {
         return pipeline == null ? Color.BLACK : pipeline.tracker.getCurrentColor();
     }
 
+    @Override
+    public synchronized ColorStatus getStatus() {
+        if (pipeline == null) {
+            var settings = settingsService.loadOrElseLoadDefault();
+            var failure = startFailure;
+            return new ColorStatus(false, toHex(Color.BLACK), settings.getProperty("broker"),
+                    settings.getProperty("topic"), null, null, null,
+                    failure == null ? null : failure.message(), failure == null ? null : failure.at());
+        }
+        return pipeline.status();
+    }
+
+    static String toHex(Color color) {
+        return String.format("#%02x%02x%02x", color.getRed(), color.getGreen(), color.getBlue());
+    }
+
+    private record Failure(String message, Instant at) {
+    }
+
+    private record Sent(String payload, Instant at) {
+    }
+
     private static final class Pipeline {
+        private final Properties properties;
         private final ScreenShooter screenShooter;
         private final ColorDetector detector;
         private final ColorStateTracker tracker;
@@ -83,7 +115,11 @@ public class ColorServiceImpl implements ColorService {
         private final ColorPublisher publisher;
         private final RepeatServiceImpl repeater;
 
+        private volatile Failure captureFailure;
+        private volatile Sent lastSent;
+
         Pipeline(Properties properties) {
+            this.properties = properties;
             this.screenShooter = new DefaultScreenShooter(properties);
             this.detector = new AbstractFactory<ColorDetector>().get(ColorDetector.DETECTOR_KEY, properties);
             this.tracker = new AbstractFactory<ColorStateTracker>().get(ColorStateTracker.STATE_TRACKER_KEY, properties);
@@ -102,11 +138,32 @@ public class ColorServiceImpl implements ColorService {
             publisher.close();
         }
 
+        ColorStatus status() {
+            var failure = captureFailure;
+            var error = failure != null ? failure.message() : publisher.getLastError();
+            var errorAt = failure != null ? failure.at() : null;
+            var sent = lastSent;
+            return new ColorStatus(true, toHex(tracker.getCurrentColor()), properties.getProperty("broker"),
+                    properties.getProperty("topic"), publisher.isConnected(),
+                    sent == null ? null : sent.payload(), sent == null ? null : sent.at(), error, errorAt);
+        }
+
         private void processFrame() {
-            var color = detector.detect(screenShooter.getScreenshot());
-            if (tracker.hasColorChanged(color)) {
-                var hsb = limit.applyFor(modifier.modify(new HSBColor(color)));
-                publisher.publish(hsb);
+            try {
+                var color = detector.detect(screenShooter.getScreenshot());
+                captureFailure = null;
+                if (tracker.hasColorChanged(color)) {
+                    var hsb = limit.applyFor(modifier.modify(new HSBColor(color)));
+                    publisher.publish(hsb);
+                    if (publisher.isConnected()) {
+                        lastSent = new Sent(MQTTColorPublisher.payload(hsb), Instant.now());
+                    }
+                }
+            } catch (RuntimeException e) {
+                if (captureFailure == null) {
+                    log.error("Ошибка захвата экрана", e);
+                }
+                captureFailure = new Failure("Ошибка захвата экрана: " + e.getMessage(), Instant.now());
             }
         }
     }

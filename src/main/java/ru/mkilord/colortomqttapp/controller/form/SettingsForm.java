@@ -8,6 +8,7 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 import lombok.Data;
 import ru.mkilord.colortomqttapp.core.tracker.DefaultColorStateTracker;
 import ru.mkilord.colortomqttapp.core.tracker.SimpleColorStateTracker;
@@ -38,6 +39,20 @@ public class SettingsForm {
     @NotBlank(message = "Укажите адрес брокера")
     @Pattern(regexp = "^(tcp|ssl|ws|wss)://.+", message = "Адрес вида tcp://host:1883")
     private String broker;
+
+    @Size(max = 255, message = "Логин не длиннее 255 символов")
+    private String username;
+
+    /**
+     * Новый пароль. Пустое значение оставляет сохраненный пароль без изменений.
+     */
+    @Size(max = 255, message = "Пароль не длиннее 255 символов")
+    private String password;
+
+    /**
+     * Сохранен ли пароль. Сам пароль на страницу не отдается.
+     */
+    private boolean passwordSet;
 
     @NotBlank(message = "Укажите топик")
     @Pattern(regexp = "^[^#+]+$", message = "Топик для публикации не может содержать # и +")
@@ -154,6 +169,9 @@ public class SettingsForm {
     public static SettingsForm from(Properties p) {
         var form = new SettingsForm();
         form.setBroker(p.getProperty("broker"));
+        form.setUsername(p.getProperty("username", ""));
+        var savedPassword = p.getProperty("password");
+        form.setPasswordSet(savedPassword != null && !savedPassword.isEmpty());
         form.setTopic(p.getProperty("topic"));
         form.setUpdatePeriod(toInt(p.getProperty("updatePeriod")));
         form.setScreenWidth(toInt(p.getProperty("screenWight")));
@@ -178,6 +196,13 @@ public class SettingsForm {
 
     public void applyTo(Properties p) {
         p.setProperty("broker", broker.trim());
+        var user = username == null ? "" : username.trim();
+        p.setProperty("username", user);
+        if (user.isEmpty()) {
+            p.setProperty("password", "");
+        } else if (password != null && !password.isEmpty()) {
+            p.setProperty("password", password);
+        }
         p.setProperty("topic", topic.trim());
         p.setProperty("updatePeriod", String.valueOf(updatePeriod));
         p.setProperty("screenWight", String.valueOf(screenWidth));

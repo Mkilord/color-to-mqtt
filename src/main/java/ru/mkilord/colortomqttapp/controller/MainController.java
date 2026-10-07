@@ -24,8 +24,7 @@ public class MainController {
 
     @GetMapping
     public String index(Model model) {
-        model.addAttribute("color", "#000000");
-        model.addAttribute("isStart", colorService.isStart());
+        model.addAttribute("status", colorService.getStatus());
         return "index";
     }
 
@@ -33,17 +32,17 @@ public class MainController {
     public ResponseEntity<String> startColorDetection() {
         try {
             colorService.start();
-            return ResponseEntity.ok("Успешно запущено!");
+            return ResponseEntity.ok("Захват запущен");
         } catch (RuntimeException e) {
             log.error("Не удалось запустить захват цвета", e);
-            return ResponseEntity.internalServerError().body("Не удалось запустить: " + e.getMessage());
+            return ResponseEntity.internalServerError().body("Не удалось запустить захват: " + e.getMessage());
         }
     }
 
     @PostMapping("/stop")
     public ResponseEntity<String> stopColorDetection() {
         colorService.stop();
-        return ResponseEntity.ok("Процесс остановлен!");
+        return ResponseEntity.ok("Захват остановлен");
     }
 
     @GetMapping("/color")

@@ -5,7 +5,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import ru.mkilord.colortomqttapp.config.SettingsConfig;
 
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
 
@@ -38,17 +37,18 @@ class SettingsServiceImplTest {
     }
 
     @Test
-    void savedValuesOverrideDefaultsButCredentialsAreNotSaved() throws Exception {
+    void savedValuesOverrideDefaultsIncludingCredentials() {
         var props = service.loadOrElseLoadDefault();
         props.setProperty("topic", "лампа/цвет");
+        props.setProperty("username", "lamp");
         props.setProperty("password", "changed");
 
         service.save(props);
 
-        assertThat(Files.readString(settingsFile)).doesNotContain("password").doesNotContain("username");
         var loaded = service.loadOrElseLoadDefault();
         assertThat(loaded.getProperty("topic")).isEqualTo("лампа/цвет");
-        assertThat(loaded.getProperty("password")).isEqualTo("secret");
+        assertThat(loaded.getProperty("username")).isEqualTo("lamp");
+        assertThat(loaded.getProperty("password")).isEqualTo("changed");
         assertThat(loaded.getProperty("broker")).isEqualTo("tcp://localhost:1883");
     }
 

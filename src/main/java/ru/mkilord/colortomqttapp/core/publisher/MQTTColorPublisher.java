@@ -1,7 +1,10 @@
 package ru.mkilord.colortomqttapp.core.publisher;
 
 import lombok.experimental.FieldDefaults;
+import lombok.experimental.NonFinal;
 import lombok.extern.slf4j.Slf4j;
+import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
+import org.eclipse.paho.client.mqttv3.MqttCallbackExtended;
 import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
@@ -23,17 +26,21 @@ import static lombok.AccessLevel.PRIVATE;
 public final class MQTTColorPublisher implements ColorPublisher {
 
     String topic;
+    String broker;
     MqttClient client;
+    @NonFinal
+    volatile String lastError;
 
     public MQTTColorPublisher(Properties properties) {
         this.topic = properties.getProperty("topic");
-        var broker = properties.getProperty("broker");
+        this.broker = properties.getProperty("broker");
         try {
             this.client = new MqttClient(broker, MqttClient.generateClientId(), new MemoryPersistence());
         } catch (MqttException e) {
             throw new IllegalArgumentException("Некорректный адрес MQTT-брокера: " + broker, e);
         }
-        connect(createOptions(properties.getProperty("username"), properties.getProperty("password")), broker);
+        client.setCallback(new ConnectionTracker());
+        connect(createOptions(properties.getProperty("username"), properties.getProperty("password")));
     }
 
     @Override
@@ -45,8 +52,19 @@ public final class MQTTColorPublisher implements ColorPublisher {
         try {
             client.publish(topic, createMessage(color));
         } catch (MqttException e) {
-            log.warn("Не удалось отправить цвет: {}", e.getMessage());
+            lastError = "Не удалось отправить цвет: " + describe(e);
+            log.warn(lastError);
         }
+    }
+
+    @Override
+    public boolean isConnected() {
+        return client.isConnected();
+    }
+
+    @Override
+    public String getLastError() {
+        return lastError;
     }
 
     @Override
@@ -61,10 +79,16 @@ public final class MQTTColorPublisher implements ColorPublisher {
         }
     }
 
-    static MqttMessage createMessage(HSBColor color) {
-        var payload = String.format(Locale.ROOT, "{\"hue\":%.0f,\"sat\":%.0f,\"brightness\":%.0f}",
+    /**
+     * Текст сообщения: JSON с тоном в градусах, насыщенностью и яркостью в процентах, округленными до целых.
+     */
+    public static String payload(HSBColor color) {
+        return String.format(Locale.ROOT, "{\"hue\":%.0f,\"sat\":%.0f,\"brightness\":%.0f}",
                 color.getHue(), color.getSaturation(), color.getBrightness());
-        var message = new MqttMessage(payload.getBytes());
+    }
+
+    static MqttMessage createMessage(HSBColor color) {
+        var message = new MqttMessage(payload(color).getBytes(java.nio.charset.StandardCharsets.UTF_8));
         message.setQos(0);
         return message;
     }
@@ -81,12 +105,49 @@ public final class MQTTColorPublisher implements ColorPublisher {
         return options;
     }
 
-    private void connect(MqttConnectOptions options, String broker) {
+    private void connect(MqttConnectOptions options) {
         try {
             client.connect(options);
+            lastError = null;
             log.info("Подключено к брокеру {}", broker);
         } catch (MqttException e) {
-            log.error("Не удалось подключиться к брокеру {}: {}", broker, e.getMessage());
+            lastError = "Не удалось подключиться к " + broker + ": " + describe(e);
+            log.error(lastError);
+        }
+    }
+
+    /**
+     * Сообщение Paho плюс причина: "Not authorized" понятнее, чем код ошибки.
+     */
+    static String describe(MqttException e) {
+        var message = e.getMessage();
+        if (e.getCause() != null && e.getCause().getMessage() != null) {
+            message += " (" + e.getCause().getMessage() + ")";
+        }
+        return message;
+    }
+
+    private final class ConnectionTracker implements MqttCallbackExtended {
+        @Override
+        public void connectComplete(boolean reconnect, String serverURI) {
+            lastError = null;
+            if (reconnect) {
+                log.info("Соединение с брокером {} восстановлено", serverURI);
+            }
+        }
+
+        @Override
+        public void connectionLost(Throwable cause) {
+            lastError = "Соединение с " + broker + " потеряно: " + cause.getMessage() + ". Переподключаюсь";
+            log.warn(lastError);
+        }
+
+        @Override
+        public void messageArrived(String topic, org.eclipse.paho.client.mqttv3.MqttMessage message) {
+        }
+
+        @Override
+        public void deliveryComplete(IMqttDeliveryToken token) {
         }
     }
 }

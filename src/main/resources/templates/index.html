@@ -1,28 +1,77 @@
 <!DOCTYPE html>
 <html lang="ru" xmlns:th="http://www.thymeleaf.org">
-<head>
-	<meta charset="UTF-8">
-	<meta content="width=device-width, initial-scale=1.0" name="viewport">
-	<title>ColorToMQTT</title>
-	<script src="/js/script.js"></script>
+<head th:replace="~{fragments/layout :: head('Главная')}"></head>
+<body class="page-home">
+<header th:replace="~{fragments/layout :: header('home')}"></header>
 
-	<link href="/styles/main.css" rel="stylesheet">
-	<link href="/styles/pages/home.css" rel="stylesheet">
-</head>
-<body>
-	<div id="app-status" th:data-status="${isStart}"></div>
-	<div class="center-div">
-		<div class="content">
-			<h1>Цвет монитора</h1>
-			<div id="color-box" class="color-box" th:style="'background-color:' + ${color}"></div>
-			<div id="color-description">rgb(0, 0, 0)</div>
-			<div class="button-container">
-				<button id="startBtn" onclick="start()">Старт</button>
-				<button onclick="stop()">Стоп</button>
-				<button onclick="window.location.href='/settings'">Настройки</button>
-			</div>
+<main class="home" id="home" th:attr="data-running=${status.running()}" th:style="'--live:' + ${status.color()}">
+	<section aria-label="Текущий цвет экрана" class="stage">
+		<div aria-hidden="true" class="stage-glow"></div>
+		<div class="monitor">
+			<div class="monitor-screen" id="monitor-screen"></div>
+			<div aria-hidden="true" class="monitor-stand"></div>
 		</div>
-	</div>
-	<div class="notification" id="notification"></div>
+		<dl class="readout">
+			<div>
+				<dt>HEX</dt>
+				<dd id="color-hex" th:text="${status.color()}">#000000</dd>
+			</div>
+			<div>
+				<dt>RGB</dt>
+				<dd id="color-rgb">0, 0, 0</dd>
+			</div>
+			<div>
+				<dt>HSB</dt>
+				<dd id="color-hsb">0°, 0%, 0%</dd>
+			</div>
+		</dl>
+	</section>
+
+	<section aria-labelledby="status-title" class="panel status-panel">
+		<h1 class="panel-title" id="status-title">Захват цвета</h1>
+		<dl class="status-list">
+			<div>
+				<dt>Состояние</dt>
+				<dd><span class="state" id="capture-state">Остановлен</span></dd>
+			</div>
+			<div>
+				<dt>Брокер</dt>
+				<dd>
+					<span class="mono" id="broker" th:text="${status.broker()}">tcp://localhost:1883</span>
+					<span class="state" id="mqtt-state" hidden></span>
+				</dd>
+			</div>
+			<div>
+				<dt>Топик</dt>
+				<dd class="mono" id="topic" th:text="${status.topic()}">colorToMQTT</dd>
+			</div>
+			<div>
+				<dt>Последнее сообщение</dt>
+				<dd>
+					<code class="payload" id="last-payload">Еще не отправлялось</code>
+					<span class="muted" id="last-sent"></span>
+				</dd>
+			</div>
+		</dl>
+		<button class="button primary large" id="toggle-capture" type="button">Запустить захват</button>
+		<p class="muted small">Цвет отправляется, только когда он заметно изменился. Порог и формат задаются в
+			<a href="/settings">настройках</a>.</p>
+	</section>
+
+	<section class="alert error" hidden id="error-banner" role="alert">
+		<h2 class="alert-title">Есть проблема</h2>
+		<p id="error-text"></p>
+		<p class="alert-meta">
+			<span id="error-time"></span>
+			<span id="error-hint"></span>
+			<a href="/settings">Открыть настройки</a>
+		</p>
+	</section>
+</main>
+
+<div th:replace="~{fragments/layout :: toast}"></div>
+<script src="/js/color.js"></script>
+<script src="/js/common.js"></script>
+<script src="/js/home.js"></script>
 </body>
 </html>
