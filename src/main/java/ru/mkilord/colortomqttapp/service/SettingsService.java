@@ -10,4 +10,9 @@ public interface SettingsService {
     Properties load() throws IOException;
     Properties loadOrElseLoadDefault();
     Properties loadDefault();
+
+    /**
+     * Удаляет сохраненные настройки и возвращает настройки по умолчанию.
+     */
+    Properties resetToDefaults();
 }

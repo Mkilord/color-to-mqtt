@@ -24,10 +24,18 @@ import static lombok.AccessLevel.PRIVATE;
 @FieldDefaults(level = PRIVATE)
 public class SettingsConfig {
 
-    final Path settingsFilePath = Path.of(".").toAbsolutePath().resolve("settings.txt").normalize();
+    /**
+     * Файл с настройками, сохраненными со страницы /settings. Путь относительно рабочей директории.
+     */
+    @Setter
+    String settingsFile = "settings.txt";
 
     @Setter
     Map<String, String> defaultSettings;
+
+    public Path getSettingsFilePath() {
+        return Path.of(settingsFile).toAbsolutePath().normalize();
+    }
 
     @Primary
     @Bean

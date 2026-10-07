@@ -1,37 +1,129 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
 <head>
 	<title>Настройки</title>
 	<meta charset="UTF-8">
+	<meta content="width=device-width, initial-scale=1.0" name="viewport">
 	<link href="/styles/main.css" rel="stylesheet" type="text/css">
 	<link href="/styles/pages/settings.css" rel="stylesheet" type="text/css">
 	<script src="/js/fetch-preview-image.js"></script>
 </head>
 <body>
+<div class="center-div">
+	<div class="content">
+		<h1>Настройки</h1>
 
-	<div class="center-div">
-		<div class="content">
-			<h1>Настройки</h1>
-			<form action="/settings" method="post">
-				<label for="mqttServer">Mqtt Server</label>
-				<input id="mqttServer" name="mqttServer" required th:value="${mqttServer}" type="text"/>
-				<label for="interval">Интервал обновления (мс):</label>
-				<input id="interval" max="1000" min="1" name="interval" required th:value="${interval}" type="number"/>
-				<label for="height">Высота</label>
-				<input id="height" min="1" name="height" required th:value="${height}" type="number"/>
-				<label for="width">Ширина</label>
-				<input id="width" min="1" name="width" required th:value="${width}" type="number"/>
-				<button id="saveButton" type="submit">Сохранить</button>
-			</form>
-			<div id="preview_container">
-				<h3>Превью</h3>
-				<button id="preview_button" onclick="fetchPreviewImage()">Показать превью</button>
-				<img alt="Превью изображения" id="preview_image"/>
+		<div class="flash" th:if="${message}" th:text="${message}">Настройки сохранены</div>
+
+		<form id="settings-form" method="post" th:action="@{/settings}" th:object="${form}">
+			<div class="errors" th:if="${#fields.hasErrors('*')}">
+				Исправьте ошибки:
+				<ul>
+					<li th:each="error : ${#fields.errors('*')}" th:text="${error}">ошибка</li>
+				</ul>
 			</div>
-			<br>
-			<a class="button-link" href="/">Назад</a>
-		</div>
-	</div>
 
+			<fieldset>
+				<legend>MQTT</legend>
+				<label>Брокер
+					<input th:errorclass="invalid" th:field="*{broker}" type="text"/>
+				</label>
+				<label>Топик
+					<input th:errorclass="invalid" th:field="*{topic}" type="text"/>
+				</label>
+				<p class="hint">Логин и пароль задаются переменными окружения MQTT_USERNAME и MQTT_PASSWORD.</p>
+			</fieldset>
+
+			<fieldset>
+				<legend>Захват</legend>
+				<label>Ширина области, px
+					<input min="1" th:errorclass="invalid" th:field="*{screenWidth}" type="number"/>
+				</label>
+				<label>Высота области, px
+					<input min="1" th:errorclass="invalid" th:field="*{screenHeight}" type="number"/>
+				</label>
+				<label>Пауза между кадрами, мс
+					<input min="1" th:errorclass="invalid" th:field="*{updatePeriod}" type="number"/>
+				</label>
+				<label>Шаг сетки, px
+					<input min="1" th:errorclass="invalid" th:field="*{cellSize}" type="number"/>
+				</label>
+			</fieldset>
+
+			<fieldset>
+				<legend>Когда отправлять цвет</legend>
+				<label class="wide">Способ сравнения
+					<select th:errorclass="invalid" th:field="*{stateTracker}">
+						<option th:each="tracker : ${trackers}" th:text="${tracker.value}"
+						        th:value="${tracker.key}">способ</option>
+					</select>
+				</label>
+				<label>Допуск тона, 0..1
+					<input max="1" min="0" step="0.01" th:errorclass="invalid" th:field="*{hueTolerance}" type="number"/>
+				</label>
+				<label>Допуск насыщенности, 0..1
+					<input max="1" min="0" step="0.01" th:errorclass="invalid" th:field="*{saturationTolerance}" type="number"/>
+				</label>
+				<label>Допуск яркости, 0..1
+					<input max="1" min="0" step="0.01" th:errorclass="invalid" th:field="*{brightnessTolerance}" type="number"/>
+				</label>
+				<label>Чувствительность RGB, %
+					<input max="100" min="0" th:errorclass="invalid" th:field="*{sensitivity}" type="number"/>
+				</label>
+			</fieldset>
+
+			<fieldset>
+				<legend>Коррекция цвета</legend>
+				<label>Сдвиг тона, градусы
+					<input step="0.1" th:errorclass="invalid" th:field="*{modifyHue}" type="number"/>
+				</label>
+				<label>Сдвиг насыщенности, %
+					<input step="0.1" th:errorclass="invalid" th:field="*{modifySaturation}" type="number"/>
+				</label>
+				<label>Сдвиг яркости, %
+					<input step="0.1" th:errorclass="invalid" th:field="*{modifyBrightness}" type="number"/>
+				</label>
+			</fieldset>
+
+			<fieldset>
+				<legend>Ограничения</legend>
+				<label>Тон от
+					<input step="0.1" th:errorclass="invalid" th:field="*{minHue}" type="number"/>
+				</label>
+				<label>Тон до
+					<input step="0.1" th:errorclass="invalid" th:field="*{maxHue}" type="number"/>
+				</label>
+				<label>Насыщенность от
+					<input step="0.1" th:errorclass="invalid" th:field="*{minSaturation}" type="number"/>
+				</label>
+				<label>Насыщенность до
+					<input step="0.1" th:errorclass="invalid" th:field="*{maxSaturation}" type="number"/>
+				</label>
+				<label>Яркость от
+					<input step="0.1" th:errorclass="invalid" th:field="*{minBrightness}" type="number"/>
+				</label>
+				<label>Яркость до
+					<input step="0.1" th:errorclass="invalid" th:field="*{maxBrightness}" type="number"/>
+				</label>
+			</fieldset>
+
+			<div class="form-actions">
+				<button id="saveButton" type="submit">Сохранить и применить</button>
+			</div>
+		</form>
+
+		<form method="post" th:action="@{/settings/reset}">
+			<button class="secondary" type="submit">Сбросить к настройкам по умолчанию</button>
+		</form>
+
+		<div id="preview_container">
+			<h3>Превью области захвата</h3>
+			<button id="preview_button" onclick="fetchPreviewImage()" type="button">Показать превью</button>
+			<img alt="Превью области захвата" id="preview_image"/>
+		</div>
+
+		<a class="button-link" href="/">Назад</a>
+	</div>
+</div>
 </body>
 </html>

@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.Properties;
 import java.util.Set;
 
@@ -76,6 +77,17 @@ public final class SettingsServiceImpl implements SettingsService {
             log.warn("Could not load properties from file {}, using defaults", settingsFilePath);
         }
         return properties;
+    }
+
+    @Override
+    public Properties resetToDefaults() {
+        var propertiesFile = config.getSettingsFilePath();
+        try {
+            Files.deleteIfExists(propertiesFile);
+        } catch (IOException e) {
+            log.error("Failed to delete settings file: {}", propertiesFile, e);
+        }
+        return loadDefault();
     }
 
     @Override
