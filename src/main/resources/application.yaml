@@ -28,10 +28,10 @@ app:
     cellSize: 20
 
     #MQTT
-    broker: "tcp://192.168.0.126:1883"
-    topic: colorToMQTT
-    username: mqtt-user
-    password: 123qwe123QWE
+    broker: ${MQTT_BROKER:tcp://localhost:1883}
+    topic: ${MQTT_TOPIC:colorToMQTT}
+    username: ${MQTT_USERNAME:}
+    password: ${MQTT_PASSWORD:}
 
     minHUE: 0
     maxHUE: 360
