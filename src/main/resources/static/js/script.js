@@ -1,12 +1,24 @@
 let isStarted = false;
 
+document.addEventListener('DOMContentLoaded', () => {
+    let status = document.getElementById('app-status').getAttribute('data-status');
+    console.log("статус:" + status);
+    if (status === 'true') {
+        setStartState();
+        updateColorLoop();
+        console.log("Программа запущена")
+    } else {
+        setStopState();
+        console.log("Программа остановлена!")
+    }
+});
+
 function start() {
     fetch('/start', {method: 'POST'})
         .then(response => response.text())
         .then((message) => {
-            document.getElementById('startBtn').classList.add('start-active');
+            setStartState()
             showNotification(message, 'success');
-            isStarted = true;
             updateColorLoop()
         }).catch(error => {
         isStarted = false;
@@ -19,16 +31,30 @@ function stop() {
         .then(response => response.text())
         .then((message) => {
             showNotification(message, 'success');
-            document.getElementById('startBtn').classList.remove('start-active');
-            isStarted = false;
+            setStopState()
         })
         .catch(error => {
-            showNotification('Ошибка при остановке: ' + error, 'error');
+            console.log(error)
+            setStopState()
         })
 }
 
+function setStopState() {
+    document.getElementById('startBtn').classList.remove('start-active');
+    isStarted = false;
+}
+
+function setStartState() {
+    isStarted = true;
+    document.getElementById('startBtn').classList.add('start-active');
+}
+
+function isStart() {
+    return isStarted;
+}
+
 function updateColorLoop() {
-    if (!isStarted) return;
+    if (!isStart()) return;
 
     fetch('/color')
         .then(response => response.text())
@@ -37,37 +63,28 @@ function updateColorLoop() {
             document.getElementById('color-box').style.backgroundColor = color;
             document.getElementById('color-description').textContent = color;
         }).catch(() => {
-        isStarted = false;
-    })
+        setStopState()})
         .finally(() => {
-            if (isStarted) {
-                setTimeout(updateColorLoop, 500); // Запускаем следующий вызов
+            if (isStart()) {
+                setTimeout(updateColorLoop, 500);
             }
         });
 }
 
-// script.js
 function showNotification(message, type) {
     let notification = document.getElementById('notification');
 
-    // Устанавливаем текст уведомления
     notification.textContent = message;
 
-    // Устанавливаем цвет в зависимости от типа сообщения
     if (type === 'success') {
-        notification.style.backgroundColor = '#4CAF50'; // Зеленый для успеха
+        notification.style.backgroundColor = '#4CAF50';
     } else if (type === 'error') {
-        notification.style.backgroundColor = '#f44336'; // Красный для ошибки
+        notification.style.backgroundColor = '#f44336';
     }
 
-    // Показываем уведомление
     notification.classList.add('show');
 
-    // Прячем уведомление через 3 секунды
     setTimeout(function () {
         notification.classList.remove('show');
     }, 3000);
 }
-
-
-setInterval(updateColor, 2000);

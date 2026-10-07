@@ -2,20 +2,27 @@
 <html lang="ru" xmlns:th="http://www.thymeleaf.org">
 <head>
 	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>Цвет Монитора</title>
+	<meta content="width=device-width, initial-scale=1.0" name="viewport">
+	<title>ColorToMQTT</title>
 	<script src="/js/script.js"></script>
-	<link href="/styles/css/style.css" rel="stylesheet">
+
+	<link href="/styles/main.css" rel="stylesheet">
+	<link href="/styles/pages/home.css" rel="stylesheet">
 </head>
 <body>
-	<h1>Цвет Монитора</h1>
-	<div id="color-box" th:style="'background-color:' + ${color} + '; width:100px; height:100px;'"></div>
-	<span id="color-description"></span>
-	<br>
-	<button id="startBtn" onclick="start()">Старт</button>
-	<button onclick="stop()">Стоп</button>
-	<button onclick="window.location.href='/settings'">Настройки</button>
-
-	<div id="notification" class="notification"></div>
+	<div id="app-status" th:data-status="${isStart}"></div>
+	<div class="center-div">
+		<div class="content">
+			<h1>Цвет монитора</h1>
+			<div id="color-box" class="color-box" th:style="'background-color:' + ${color}"></div>
+			<div id="color-description">rgb(0, 0, 0)</div>
+			<div class="button-container">
+				<button id="startBtn" onclick="start()">Старт</button>
+				<button onclick="stop()">Стоп</button>
+				<button onclick="window.location.href='/settings'">Настройки</button>
+			</div>
+		</div>
+	</div>
+	<div class="notification" id="notification"></div>
 </body>
 </html>

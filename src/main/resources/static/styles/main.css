@@ -1,0 +1,39 @@
+@import "base/normalize.css";
+@import "components/button/button.css";
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
+    font-size: small;
+}
+h1 {
+    color: #333;
+}
+
+#preview_container {
+    margin-top: 20px;
+}
+
+#preview_image {
+    display: none;
+    max-width: 100%;
+    border: 2px solid #000;
+    border-radius: 10px;
+    margin-top: 10px;
+}
+
+.notification {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background-color: #28a745;
+    color: white;
+    padding: 15px;
+    border-radius: 5px;
+    display: none;
+    z-index: 1000;
+}
+
+.notification.show {
+    display: block;
+}
+

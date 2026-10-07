@@ -3,23 +3,35 @@
 <head>
 	<title>Настройки</title>
 	<meta charset="UTF-8">
-	<link href="/styles/css/style.css" rel="stylesheet" type="text/css">
+	<link href="/styles/main.css" rel="stylesheet" type="text/css">
+	<link href="/styles/pages/settings.css" rel="stylesheet" type="text/css">
+	<script src="/js/fetch-preview-image.js"></script>
 </head>
 <body>
-	<h1>Настройки</h1>
-	<div>
-		Превью
+
+	<div class="center-div">
+		<div class="content">
+			<h1>Настройки</h1>
+			<form action="/settingsService" method="post" >
+				<label for="mqttServer">Mqtt Server</label>
+				<input id="mqttServer" name="mqttServer" required th:value="${mqttServer}" type="text"/>
+				<label for="interval">Интервал обновления (мс):</label>
+				<input id="interval" max="60" min="1" name="interval" required th:value="${interval}" type="number"/>
+				<label for="height">Высота</label>
+				<input id="height" name="height" required th:value="${height}" type="number"/>
+				<label for="width">Ширина</label>
+				<input id="width" name="width" required th:value="${width}" type="number"/>
+				<button id="saveButton" type="submit">Сохранить</button>
+			</form>
+			<div id="preview_container">
+				<h3>Превью</h3>
+				<button id="preview_button" onclick="fetchPreviewImage()">Показать превью</button>
+				<img alt="Превью изображения" id="preview_image"/>
+			</div>
+			<br>
+			<a class="button-link" href="/">Назад</a>
+		</div>
 	</div>
-	<form action="/settingsService" method="post">
-		<label for="mqttServer">Mqtt Server</label>
-		<input id="mqttServer" name="mqttServer" required th:value="${mqttServer}"
-		       type="text"/>
-		<label for="interval">Интервал обновления (мс):</label>
-		<input id="interval" max="60" min="1" name="interval" required th:value="${interval}"
-		       type="number"/>
-		<button type="submit">Сохранить</button>
-	</form>
-	<br>
-	<a href="/">Назад</a>
+
 </body>
 </html>

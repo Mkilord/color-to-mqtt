@@ -1,0 +1,20 @@
+@import "../layout/center-layout.css";
+
+form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    align-items: flex-start;
+    padding: 0 10px 0 10px;
+    flex-wrap: wrap;
+    height: 20vh;
+}
+
+#saveButton {
+    margin-top: 10px;
+    align-self: flex-end;
+}
+
+form input {
+    width: 40%;
+}

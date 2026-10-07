@@ -1,0 +1,30 @@
+button, .button-link, .start-active {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+button:hover {
+    background-color: #0056b3;
+}
+
+.start-active {
+    background-color: #28a745;
+}
+
+.start-active:hover {
+    background-color: #1b7731;
+}
+
+.button-link {
+    display: inline-block;
+    text-align: center;
+    text-decoration: none;
+}
+
+.button-link:hover {
+    background-color: #0056b3;
+}
