@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import ru.mkilord.colortomqttapp.service.SettingsService;
 import ru.mkilord.colortomqttapp.service.impl.ScreenRenderServiceImpl;
 
 import java.util.Properties;
@@ -22,6 +23,7 @@ import static lombok.AccessLevel.PRIVATE;
 @AllArgsConstructor
 public class SettingsController {
     Properties prop;
+    SettingsService settingsService;
 
     @GetMapping("/preview_image")
     public ResponseEntity<byte[]> previewImage() {
@@ -31,13 +33,25 @@ public class SettingsController {
 
     @GetMapping
     public String settingsPage(Model model) {
-        model.addAttribute("mqttServer", prop.get("text"));
-        model.addAttribute("interval", prop.get("maxHSB"));
+        model.addAttribute("mqttServer", prop.getProperty("broker"));
+        model.addAttribute("interval", prop.getProperty("updatePeriod"));
+        model.addAttribute("height", prop.getProperty("screenHeight"));
+        model.addAttribute("width", prop.getProperty("screenWight"));
         return "settings";
     }
 
+    /**
+     * Сохраняет настройки в settings.txt. Превью сразу использует новый размер области,
+     * захват цвета применит их при следующем запуске.
+     */
     @PostMapping
-    public String updateSettings(@RequestParam String mqttServer, @RequestParam int interval) {
+    public String updateSettings(@RequestParam String mqttServer, @RequestParam int interval,
+                                 @RequestParam int height, @RequestParam int width) {
+        prop.setProperty("broker", mqttServer);
+        prop.setProperty("updatePeriod", String.valueOf(interval));
+        prop.setProperty("screenHeight", String.valueOf(height));
+        prop.setProperty("screenWight", String.valueOf(width));
+        settingsService.save(prop);
         return "redirect:/settings";
     }
 }

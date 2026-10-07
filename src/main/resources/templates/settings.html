@@ -12,15 +12,15 @@
 	<div class="center-div">
 		<div class="content">
 			<h1>Настройки</h1>
-			<form action="/settingsService" method="post" >
+			<form action="/settings" method="post">
 				<label for="mqttServer">Mqtt Server</label>
 				<input id="mqttServer" name="mqttServer" required th:value="${mqttServer}" type="text"/>
 				<label for="interval">Интервал обновления (мс):</label>
-				<input id="interval" max="60" min="1" name="interval" required th:value="${interval}" type="number"/>
+				<input id="interval" max="1000" min="1" name="interval" required th:value="${interval}" type="number"/>
 				<label for="height">Высота</label>
-				<input id="height" name="height" required th:value="${height}" type="number"/>
+				<input id="height" min="1" name="height" required th:value="${height}" type="number"/>
 				<label for="width">Ширина</label>
-				<input id="width" name="width" required th:value="${width}" type="number"/>
+				<input id="width" min="1" name="width" required th:value="${width}" type="number"/>
 				<button id="saveButton" type="submit">Сохранить</button>
 			</form>
 			<div id="preview_container">

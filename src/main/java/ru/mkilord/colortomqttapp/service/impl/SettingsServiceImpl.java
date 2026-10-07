@@ -10,9 +10,11 @@ import ru.mkilord.colortomqttapp.service.SettingsService;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.Properties;
+import java.util.Set;
 
 import static lombok.AccessLevel.PRIVATE;
 
@@ -22,14 +24,22 @@ import static lombok.AccessLevel.PRIVATE;
 @FieldDefaults(level = PRIVATE, makeFinal = true)
 public final class SettingsServiceImpl implements SettingsService {
 
+    /**
+     * Учетные данные MQTT берутся только из конфигурации и в файл не пишутся.
+     */
+    static Set<String> NOT_SAVED_KEYS = Set.of("username", "password");
+
     SettingsConfig config;
 
     @Override
     public void save(Properties editedProperties) {
         var propertiesFile = config.getSettingsFilePath();
+        var toSave = new Properties();
+        toSave.putAll(editedProperties);
+        NOT_SAVED_KEYS.forEach(toSave::remove);
 
         try (var fos = new OutputStreamWriter(new FileOutputStream(propertiesFile.toFile()), StandardCharsets.UTF_8)) {
-            editedProperties.store(fos, "Application settings");
+            toSave.store(fos, "Application settings");
             log.debug("Settings saved to {}", propertiesFile);
         } catch (IOException e) {
             log.error("Failed to save settings: {}", propertiesFile, e);
@@ -40,24 +50,32 @@ public final class SettingsServiceImpl implements SettingsService {
     public Properties load() throws IOException {
         var propertiesFile = config.getSettingsFilePath();
 
-        try (var fis = new FileInputStream(propertiesFile.toFile())) {
+        try (var reader = new InputStreamReader(new FileInputStream(propertiesFile.toFile()), StandardCharsets.UTF_8)) {
             var properties = new Properties();
-            properties.load(fis);
+            properties.load(reader);
             log.debug("Loaded properties from {}", propertiesFile);
             return properties;
         }
     }
 
+    /**
+     * Настройки по умолчанию, поверх которых применены сохраненные в файле.
+     */
     @Override
     public Properties loadOrElseLoadDefault() {
         var settingsFilePath = config.getSettingsFilePath();
+        var properties = loadDefault();
         log.debug("Loading properties from file {}", settingsFilePath);
         try {
-            return load();
+            load().forEach((key, value) -> {
+                if (!NOT_SAVED_KEYS.contains(key)) {
+                    properties.put(key, value);
+                }
+            });
         } catch (IOException e) {
-            log.warn("Could not load properties from file {}", settingsFilePath);
-            return loadDefault();
+            log.warn("Could not load properties from file {}, using defaults", settingsFilePath);
         }
+        return properties;
     }
 
     @Override
