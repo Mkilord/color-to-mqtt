@@ -37,11 +37,11 @@ class ColorZonesTest {
     }
 
     @Test
-    void grayIsSentWithoutHueAndSaturation() {
+    void grayIsSentAsWhiteInColorMode() {
         var out = zones.toOutput(zones.normalize(new Color(51, 48, 48)), modifier, limit);
 
         assertThat(out.getHue()).isZero();
-        assertThat(out.getSaturation()).isZero();
+        assertThat(out.getSaturation()).isEqualTo(ColorZones.GRAY_SATURATION);
         assertThat(out.getBrightness()).isCloseTo(22f, within(0.01f));
     }
 
@@ -71,15 +71,5 @@ class ColorZonesTest {
 
         assertThat(fromEmpty.zoneOf(new Color(10, 10, 10))).isEqualTo(ColorZone.BLACK);
         assertThat(fromEmpty.zoneOf(new Color(100, 95, 95))).isEqualTo(ColorZone.GRAY);
-    }
-
-    @Test
-    void whiteKelvinIsAddedOnlyForGray() {
-        var withKelvin = new ColorZones(5, 12, 5000);
-
-        assertThat(withKelvin.kelvinFor(new Color(120, 118, 118))).isEqualTo(5000);
-        assertThat(withKelvin.kelvinFor(Color.BLACK)).isNull();
-        assertThat(withKelvin.kelvinFor(new Color(200, 40, 40))).isNull();
-        assertThat(zones.kelvinFor(new Color(120, 118, 118))).isNull();
     }
 }

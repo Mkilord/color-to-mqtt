@@ -24,10 +24,10 @@ app:
     modifyHue: 0
     modifySaturation: 0
     modifyBrightness: 0
+    saturationBoost: 30 #%, приближает насыщенность к 100
 
     blackThreshold: 5 #%, ниже отправляется яркость 0
     grayThreshold: 12 #%, ниже отправляется насыщенность 0
-    whiteKelvin: 5000 #K для серых кадров, 0 не отправлять
 
     cellSize: 20
 

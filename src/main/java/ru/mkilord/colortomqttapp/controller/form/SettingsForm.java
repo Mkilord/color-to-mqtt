@@ -117,6 +117,11 @@ public class SettingsForm {
     @DecimalMax(value = "100", message = "До 100")
     private Float modifyBrightness;
 
+    @NotNull(message = "Укажите усиление")
+    @DecimalMin(value = "0", message = "От 0")
+    @DecimalMax(value = "100", message = "До 100")
+    private Float saturationBoost;
+
     @NotNull(message = "Укажите порог")
     @DecimalMin(value = "0", message = "От 0")
     @DecimalMax(value = "50", message = "До 50")
@@ -126,11 +131,6 @@ public class SettingsForm {
     @DecimalMin(value = "0", message = "От 0")
     @DecimalMax(value = "100", message = "До 100")
     private Float grayThreshold;
-
-    @NotNull(message = "Укажите температуру")
-    @Min(value = 0, message = "От 0")
-    @Max(value = 10000, message = "До 10000")
-    private Integer whiteKelvin;
 
     @NotNull(message = "Укажите минимум")
     @DecimalMin(value = "0", message = "От 0")
@@ -201,12 +201,11 @@ public class SettingsForm {
         form.setModifyHue(toFloat(p.getProperty("modifyHue")));
         form.setModifySaturation(toFloat(p.getProperty("modifySaturation")));
         form.setModifyBrightness(toFloat(p.getProperty("modifyBrightness")));
+        form.setSaturationBoost(toFloat(p.getProperty("saturationBoost", "0")));
         form.setBlackThreshold(toFloat(p.getProperty(ColorZones.BLACK_THRESHOLD_KEY,
                 String.valueOf(ColorZones.DEFAULT_BLACK_THRESHOLD))));
         form.setGrayThreshold(toFloat(p.getProperty(ColorZones.GRAY_THRESHOLD_KEY,
                 String.valueOf(ColorZones.DEFAULT_GRAY_THRESHOLD))));
-        form.setWhiteKelvin(toInt(p.getProperty(ColorZones.WHITE_KELVIN_KEY,
-                String.valueOf(ColorZones.DEFAULT_WHITE_KELVIN))));
         form.setMinHue(toFloat(p.getProperty("minHUE")));
         form.setMaxHue(toFloat(p.getProperty("maxHUE")));
         form.setMinSaturation(toFloat(p.getProperty("minSaturation")));
@@ -238,9 +237,9 @@ public class SettingsForm {
         p.setProperty("modifyHue", String.valueOf(modifyHue));
         p.setProperty("modifySaturation", String.valueOf(modifySaturation));
         p.setProperty("modifyBrightness", String.valueOf(modifyBrightness));
+        p.setProperty("saturationBoost", String.valueOf(saturationBoost));
         p.setProperty(ColorZones.BLACK_THRESHOLD_KEY, String.valueOf(blackThreshold));
         p.setProperty(ColorZones.GRAY_THRESHOLD_KEY, String.valueOf(grayThreshold));
-        p.setProperty(ColorZones.WHITE_KELVIN_KEY, String.valueOf(whiteKelvin));
         p.setProperty("minHUE", String.valueOf(minHue));
         p.setProperty("maxHUE", String.valueOf(maxHue));
         p.setProperty("minSaturation", String.valueOf(minSaturation));

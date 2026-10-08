@@ -22,12 +22,4 @@ class MQTTColorPublisherTest {
             Locale.setDefault(previous);
         }
     }
-
-    @Test
-    void kelvinIsAddedWhenSet() {
-        assertThat(MQTTColorPublisher.payload(new HSBColor(0, 0, 20), 5000))
-                .isEqualTo("{\"hue\":0,\"sat\":0,\"brightness\":20,\"kelvin\":5000}");
-        assertThat(MQTTColorPublisher.payload(new HSBColor(0, 0, 20), null))
-                .isEqualTo("{\"hue\":0,\"sat\":0,\"brightness\":20}");
-    }
 }

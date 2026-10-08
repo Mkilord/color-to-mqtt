@@ -45,17 +45,12 @@ public final class MQTTColorPublisher implements ColorPublisher {
 
     @Override
     public void publish(HSBColor color) {
-        publish(color, null);
-    }
-
-    @Override
-    public void publish(HSBColor color, Integer kelvin) {
         if (!client.isConnected()) {
             log.debug("Нет соединения с брокером, сообщение пропущено");
             return;
         }
         try {
-            client.publish(topic, createMessage(color, kelvin));
+            client.publish(topic, createMessage(color));
         } catch (MqttException e) {
             lastError = "Не удалось отправить цвет: " + describe(e);
             log.warn(lastError);
@@ -88,24 +83,12 @@ public final class MQTTColorPublisher implements ColorPublisher {
      * Текст сообщения: JSON с тоном в градусах, насыщенностью и яркостью в процентах, округленными до целых.
      */
     public static String payload(HSBColor color) {
-        return payload(color, null);
-    }
-
-    /**
-     * То же, что {@link #payload(HSBColor)}, плюс поле {@code kelvin}, если температура задана.
-     */
-    public static String payload(HSBColor color, Integer kelvin) {
-        var json = String.format(Locale.ROOT, "{\"hue\":%.0f,\"sat\":%.0f,\"brightness\":%.0f",
+        return String.format(Locale.ROOT, "{\"hue\":%.0f,\"sat\":%.0f,\"brightness\":%.0f}",
                 color.getHue(), color.getSaturation(), color.getBrightness());
-        return kelvin == null ? json + "}" : json + ",\"kelvin\":" + kelvin + "}";
     }
 
     static MqttMessage createMessage(HSBColor color) {
-        return createMessage(color, null);
-    }
-
-    static MqttMessage createMessage(HSBColor color, Integer kelvin) {
-        var message = new MqttMessage(payload(color, kelvin).getBytes(java.nio.charset.StandardCharsets.UTF_8));
+        var message = new MqttMessage(payload(color).getBytes(java.nio.charset.StandardCharsets.UTF_8));
         message.setQos(0);
         return message;
     }

@@ -179,10 +179,9 @@ public class ColorServiceImpl implements ColorService {
                 captureFailure = null;
                 if (hasChanged(color)) {
                     var hsb = zones.toOutput(color, modifier, limit);
-                    var kelvin = zones.kelvinFor(color);
-                    publisher.publish(hsb, kelvin);
+                    publisher.publish(hsb);
                     if (publisher.isConnected()) {
-                        lastSent = new Sent(MQTTColorPublisher.payload(hsb, kelvin), Instant.now());
+                        lastSent = new Sent(MQTTColorPublisher.payload(hsb), Instant.now());
                     }
                 }
             } catch (RuntimeException e) {

@@ -116,12 +116,10 @@ class SettingsFormTest {
         var props = TestProperties.defaults();
         props.remove("blackThreshold");
         props.remove("grayThreshold");
-        props.remove("whiteKelvin");
 
         var form = SettingsForm.from(props);
 
         assertThat(form.getBlackThreshold()).isEqualTo(5f);
         assertThat(form.getGrayThreshold()).isEqualTo(12f);
-        assertThat(form.getWhiteKelvin()).isEqualTo(5000);
     }
 }

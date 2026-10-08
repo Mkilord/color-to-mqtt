@@ -60,34 +60,23 @@
             minBrightness: num('minBrightness'), maxBrightness: num('maxBrightness')
         };
         const zone = ColorMath.zoneOf(source, {black: num('blackThreshold'), gray: num('grayThreshold')});
-        let modified = ColorMath.modify(source, {h: num('modifyHue'), s: num('modifySaturation'), b: num('modifyBrightness')});
+        let modified = ColorMath.modify(source, {h: num('modifyHue'), s: num('modifySaturation'), b: num('modifyBrightness'), boost: num('saturationBoost')});
         let sent = ColorMath.limit(modified, range);
         const note = el('zone-note');
-        const whiteKelvin = num('whiteKelvin');
-        let kelvin = null;
         if (zone === 'black') {
             modified = {h: 0, s: 0, b: 0};
             sent = {h: 0, s: 0, b: 0};
             note.textContent = 'Темнее порога черного: уйдет яркость 0, коррекция и ограничения не применяются.';
         } else if (zone === 'gray') {
-            modified = {h: 0, s: 0, b: modified.b};
-            sent = {h: 0, s: 0, b: sent.b};
-            kelvin = whiteKelvin > 0 ? whiteKelvin : null;
-            note.textContent = kelvin
-                ? `Насыщенность ниже порога серого: уйдет белый ${kelvin} K, корректируется только яркость.`
-                : 'Насыщенность ниже порога серого: уйдет белый свет, корректируется только яркость.';
+            modified = {h: 0, s: 1, b: modified.b};
+            sent = {h: 0, s: 1, b: sent.b};
+            note.textContent = 'Насыщенность ниже порога серого: уйдет белый в цветном режиме, корректируется только яркость.';
         }
         note.hidden = zone === 'color';
 
         el('swatch-source').style.background = sample.value;
         el('swatch-modified').style.background = rgbCss(modified);
-        if (kelvin) {
-            const white = ColorMath.kelvinToRgb(kelvin);
-            const k = sent.b / 100;
-            el('swatch-sent').style.background = ColorMath.rgbToHex({r: white.r * k, g: white.g * k, b: white.b * k});
-        } else {
-            el('swatch-sent').style.background = rgbCss(sent);
-        }
+        el('swatch-sent').style.background = rgbCss(sent);
 
         el('bar-s').style.background =
             `linear-gradient(to right, ${rgbCss({h: modified.h, s: 0, b: Math.max(modified.b, 60)})}, ${rgbCss({h: modified.h, s: 100, b: Math.max(modified.b, 60)})})`;
@@ -102,7 +91,7 @@
         el('value-b').textContent = `${Math.round(sent.b)}%`;
 
         el('message-topic').textContent = form.elements['topic'].value || 'не задан';
-        el('message-payload').textContent = ColorMath.payload(sent, kelvin);
+        el('message-payload').textContent = ColorMath.payload(sent);
     }
 
     el('sample-current').addEventListener('click', async () => {

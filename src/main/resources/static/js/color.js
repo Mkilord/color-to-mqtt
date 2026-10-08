@@ -61,12 +61,14 @@ const ColorMath = (() => {
 
     const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
 
+    // Как DefaultColorModifier: усиление насыщенности, затем сдвиг.
     function modify(hsb, shift) {
         let hue = (hsb.h + shift.h) % 360;
         if (hue < 0) {
             hue += 360;
         }
-        return {h: hue, s: clamp(hsb.s + shift.s, 0, 100), b: clamp(hsb.b + shift.b, 0, 100)};
+        const boosted = hsb.s + (100 - hsb.s) * (shift.boost || 0) / 100;
+        return {h: hue, s: clamp(boosted + shift.s, 0, 100), b: clamp(hsb.b + shift.b, 0, 100)};
     }
 
     function limit(hsb, range) {
@@ -88,20 +90,10 @@ const ColorMath = (() => {
         return 'color';
     }
 
-    // Приблизительный цвет белого заданной температуры (формула Таннера Хелланда), 1000..40000 K.
-    function kelvinToRgb(kelvin) {
-        const t = clamp(kelvin, 1000, 40000) / 100;
-        const r = t <= 66 ? 255 : 329.698727446 * Math.pow(t - 60, -0.1332047592);
-        const g = t <= 66 ? 99.4708025861 * Math.log(t) - 161.1195681661 : 288.1221695283 * Math.pow(t - 60, -0.0755148492);
-        const b = t >= 66 ? 255 : t <= 19 ? 0 : 138.5177312231 * Math.log(t - 10) - 305.0447927307;
-        return {r: clamp(r, 0, 255), g: clamp(g, 0, 255), b: clamp(b, 0, 255)};
+    // Как MQTTColorPublisher.payload: округление до целых.
+    function payload(hsb) {
+        return `{"hue":${Math.round(hsb.h)},"sat":${Math.round(hsb.s)},"brightness":${Math.round(hsb.b)}}`;
     }
 
-    // Как MQTTColorPublisher.payload: округление до целых, kelvin только если задан.
-    function payload(hsb, kelvin) {
-        const base = `{"hue":${Math.round(hsb.h)},"sat":${Math.round(hsb.s)},"brightness":${Math.round(hsb.b)}`;
-        return kelvin ? `${base},"kelvin":${Math.round(kelvin)}}` : base + '}';
-    }
-
-    return {hexToRgb, rgbToHex, rgbToHsb, hsbToRgb, modify, limit, zoneOf, kelvinToRgb, payload, clamp};
+    return {hexToRgb, rgbToHex, rgbToHsb, hsbToRgb, modify, limit, zoneOf, payload, clamp};
 })();

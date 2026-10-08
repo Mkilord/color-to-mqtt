@@ -32,4 +32,27 @@ class DefaultColorModifierTest {
 
         assertThat(result.getHue()).isCloseTo(340, within(0.001f));
     }
+
+    @Test
+    void saturationBoostMovesSaturationTowardsFull() {
+        var props = TestProperties.defaults();
+        props.setProperty("modifyHue", "0");
+        props.setProperty("modifySaturation", "0");
+        props.setProperty("modifyBrightness", "0");
+        props.setProperty("saturationBoost", "40");
+
+        var result = new DefaultColorModifier(props).modify(new HSBColor(358, 65, 20));
+
+        assertThat(result.getSaturation()).isCloseTo(79, within(0.001f));
+        assertThat(result.getBrightness()).isEqualTo(20);
+    }
+
+    @Test
+    void missingBoostMeansNoChange() {
+        var props = TestProperties.defaults();
+        props.remove("saturationBoost");
+        props.setProperty("modifySaturation", "0");
+
+        assertThat(new DefaultColorModifier(props).modify(new HSBColor(10, 65, 50)).getSaturation()).isEqualTo(65);
+    }
 }
