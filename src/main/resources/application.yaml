@@ -18,12 +18,15 @@ app:
     stateTracker: ru.mkilord.colortomqttapp.core.tracker.ToleranceColorStateTracker
     sensitivity: 30 #min 0 max 100
     hueTolerance: 0.2
-    saturationTolerance: 0.3
-    brightnessTolerance: 0.3
+    saturationTolerance: 0.15
+    brightnessTolerance: 0.06
 
-    modifyHue: 2
-    modifySaturation: 10
-    modifyBrightness: 2
+    modifyHue: 0
+    modifySaturation: 0
+    modifyBrightness: 0
+
+    blackThreshold: 5 #%, ниже отправляется яркость 0
+    grayThreshold: 12 #%, ниже отправляется насыщенность 0
 
     cellSize: 20
 
@@ -35,7 +38,7 @@ app:
 
     minHUE: 0
     maxHUE: 360
-    minSaturation: 10
+    minSaturation: 0
     maxSaturation: 100
     minBrightness: 0
     maxBrightness: 100

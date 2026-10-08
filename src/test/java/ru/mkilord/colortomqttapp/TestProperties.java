@@ -26,6 +26,8 @@ public final class TestProperties {
         p.setProperty("modifyHue", "2");
         p.setProperty("modifySaturation", "10");
         p.setProperty("modifyBrightness", "2");
+        p.setProperty("blackThreshold", "5");
+        p.setProperty("grayThreshold", "12");
         p.setProperty("cellSize", "20");
         p.setProperty("broker", "tcp://localhost:1883");
         p.setProperty("topic", "colorToMQTT");

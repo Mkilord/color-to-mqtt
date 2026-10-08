@@ -13,6 +13,7 @@ import lombok.Data;
 import ru.mkilord.colortomqttapp.core.tracker.DefaultColorStateTracker;
 import ru.mkilord.colortomqttapp.core.tracker.SimpleColorStateTracker;
 import ru.mkilord.colortomqttapp.core.tracker.ToleranceColorStateTracker;
+import ru.mkilord.colortomqttapp.core.zone.ColorZones;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -116,6 +117,16 @@ public class SettingsForm {
     @DecimalMax(value = "100", message = "До 100")
     private Float modifyBrightness;
 
+    @NotNull(message = "Укажите порог")
+    @DecimalMin(value = "0", message = "От 0")
+    @DecimalMax(value = "50", message = "До 50")
+    private Float blackThreshold;
+
+    @NotNull(message = "Укажите порог")
+    @DecimalMin(value = "0", message = "От 0")
+    @DecimalMax(value = "100", message = "До 100")
+    private Float grayThreshold;
+
     @NotNull(message = "Укажите минимум")
     @DecimalMin(value = "0", message = "От 0")
     @DecimalMax(value = "360", message = "До 360")
@@ -185,6 +196,10 @@ public class SettingsForm {
         form.setModifyHue(toFloat(p.getProperty("modifyHue")));
         form.setModifySaturation(toFloat(p.getProperty("modifySaturation")));
         form.setModifyBrightness(toFloat(p.getProperty("modifyBrightness")));
+        form.setBlackThreshold(toFloat(p.getProperty(ColorZones.BLACK_THRESHOLD_KEY,
+                String.valueOf(ColorZones.DEFAULT_BLACK_THRESHOLD))));
+        form.setGrayThreshold(toFloat(p.getProperty(ColorZones.GRAY_THRESHOLD_KEY,
+                String.valueOf(ColorZones.DEFAULT_GRAY_THRESHOLD))));
         form.setMinHue(toFloat(p.getProperty("minHUE")));
         form.setMaxHue(toFloat(p.getProperty("maxHUE")));
         form.setMinSaturation(toFloat(p.getProperty("minSaturation")));
@@ -216,6 +231,8 @@ public class SettingsForm {
         p.setProperty("modifyHue", String.valueOf(modifyHue));
         p.setProperty("modifySaturation", String.valueOf(modifySaturation));
         p.setProperty("modifyBrightness", String.valueOf(modifyBrightness));
+        p.setProperty(ColorZones.BLACK_THRESHOLD_KEY, String.valueOf(blackThreshold));
+        p.setProperty(ColorZones.GRAY_THRESHOLD_KEY, String.valueOf(grayThreshold));
         p.setProperty("minHUE", String.valueOf(minHue));
         p.setProperty("maxHUE", String.valueOf(maxHue));
         p.setProperty("minSaturation", String.valueOf(minSaturation));

@@ -77,10 +77,21 @@ const ColorMath = (() => {
         };
     }
 
+    // Как ColorZones на сервере: черный, серый или цветной.
+    function zoneOf(hsb, zones) {
+        if (hsb.b < zones.black) {
+            return 'black';
+        }
+        if (hsb.s < zones.gray) {
+            return 'gray';
+        }
+        return 'color';
+    }
+
     // Как MQTTColorPublisher.payload: округление до целых.
     function payload(hsb) {
         return `{"hue":${Math.round(hsb.h)},"sat":${Math.round(hsb.s)},"brightness":${Math.round(hsb.b)}}`;
     }
 
-    return {hexToRgb, rgbToHex, rgbToHsb, hsbToRgb, modify, limit, payload, clamp};
+    return {hexToRgb, rgbToHex, rgbToHsb, hsbToRgb, modify, limit, zoneOf, payload, clamp};
 })();

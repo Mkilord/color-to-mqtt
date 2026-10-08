@@ -5,7 +5,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
 import ru.mkilord.colortomqttapp.core.AbstractFactory;
-import ru.mkilord.colortomqttapp.core.HSBColor;
 import ru.mkilord.colortomqttapp.core.detector.ColorDetector;
 import ru.mkilord.colortomqttapp.core.limit.ColorLimit;
 import ru.mkilord.colortomqttapp.core.limit.DefaultColorLimit;
@@ -16,6 +15,7 @@ import ru.mkilord.colortomqttapp.core.publisher.MQTTColorPublisher;
 import ru.mkilord.colortomqttapp.core.screenshoter.DefaultScreenShooter;
 import ru.mkilord.colortomqttapp.core.screenshoter.ScreenShooter;
 import ru.mkilord.colortomqttapp.core.tracker.ColorStateTracker;
+import ru.mkilord.colortomqttapp.core.zone.ColorZones;
 import ru.mkilord.colortomqttapp.service.ColorService;
 import ru.mkilord.colortomqttapp.service.ColorStatus;
 import ru.mkilord.colortomqttapp.service.SettingsService;
@@ -112,11 +112,13 @@ public class ColorServiceImpl implements ColorService {
         private final ColorStateTracker tracker;
         private final ColorModifier modifier;
         private final ColorLimit limit;
+        private final ColorZones zones;
         private final ColorPublisher publisher;
         private final RepeatServiceImpl repeater;
 
         private volatile Failure captureFailure;
         private volatile Sent lastSent;
+        private boolean firstFrame = true;
 
         Pipeline(Properties properties) {
             this.properties = properties;
@@ -125,6 +127,7 @@ public class ColorServiceImpl implements ColorService {
             this.tracker = new AbstractFactory<ColorStateTracker>().get(ColorStateTracker.STATE_TRACKER_KEY, properties);
             this.modifier = new DefaultColorModifier(properties);
             this.limit = new DefaultColorLimit(properties);
+            this.zones = new ColorZones(properties);
             this.publisher = new MQTTColorPublisher(properties);
             this.repeater = new RepeatServiceImpl(properties);
         }
@@ -148,12 +151,34 @@ public class ColorServiceImpl implements ColorService {
                     sent == null ? null : sent.payload(), sent == null ? null : sent.at(), error, errorAt);
         }
 
+        /**
+         * Переход между черным, серым и цветным отправляется всегда, даже если он меньше допусков:
+         * иначе светильник не погаснет при затемнении экрана. Первый кадр после запуска
+         * отправляется всегда, чтобы светильник сразу пришел в состояние экрана.
+         */
+        private boolean hasChanged(Color color) {
+            if (firstFrame) {
+                firstFrame = false;
+                tracker.setCurrentColor(color);
+                return true;
+            }
+            var zoneChanged = zones.zoneOf(tracker.getCurrentColor()) != zones.zoneOf(color);
+            if (tracker.hasColorChanged(color)) {
+                return true;
+            }
+            if (zoneChanged) {
+                tracker.setCurrentColor(color);
+                return true;
+            }
+            return false;
+        }
+
         private void processFrame() {
             try {
-                var color = detector.detect(screenShooter.getScreenshot());
+                var color = zones.normalize(detector.detect(screenShooter.getScreenshot()));
                 captureFailure = null;
-                if (tracker.hasColorChanged(color)) {
-                    var hsb = limit.applyFor(modifier.modify(new HSBColor(color)));
+                if (hasChanged(color)) {
+                    var hsb = zones.toOutput(color, modifier, limit);
                     publisher.publish(hsb);
                     if (publisher.isConnected()) {
                         lastSent = new Sent(MQTTColorPublisher.payload(hsb), Instant.now());

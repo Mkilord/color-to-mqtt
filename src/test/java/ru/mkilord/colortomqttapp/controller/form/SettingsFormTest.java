@@ -110,4 +110,16 @@ class SettingsFormTest {
         assertThat(props.getProperty("username")).isEmpty();
         assertThat(props.getProperty("password")).isEmpty();
     }
+
+    @Test
+    void zoneThresholdsFallBackToDefaultsForOldSettingsFile() {
+        var props = TestProperties.defaults();
+        props.remove("blackThreshold");
+        props.remove("grayThreshold");
+
+        var form = SettingsForm.from(props);
+
+        assertThat(form.getBlackThreshold()).isEqualTo(5f);
+        assertThat(form.getGrayThreshold()).isEqualTo(12f);
+    }
 }

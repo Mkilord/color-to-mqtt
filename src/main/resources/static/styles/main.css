@@ -1051,3 +1051,12 @@ h1, h2, h3 {
     grid-column: 1 / -1;
     margin: 0;
 }
+
+.zone-note {
+    margin: 0;
+    padding: 8px 10px;
+    border-radius: var(--radius-s);
+    background: var(--surface-2);
+    color: var(--ink);
+    font-size: 13px;
+}

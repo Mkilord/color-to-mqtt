@@ -54,13 +54,25 @@
 
     function updatePreview() {
         const source = ColorMath.rgbToHsb(ColorMath.hexToRgb(sample.value));
-        const modified = ColorMath.modify(source, {h: num('modifyHue'), s: num('modifySaturation'), b: num('modifyBrightness')});
         const range = {
             minHue: num('minHue'), maxHue: num('maxHue'),
             minSaturation: num('minSaturation'), maxSaturation: num('maxSaturation'),
             minBrightness: num('minBrightness'), maxBrightness: num('maxBrightness')
         };
-        const sent = ColorMath.limit(modified, range);
+        const zone = ColorMath.zoneOf(source, {black: num('blackThreshold'), gray: num('grayThreshold')});
+        let modified = ColorMath.modify(source, {h: num('modifyHue'), s: num('modifySaturation'), b: num('modifyBrightness')});
+        let sent = ColorMath.limit(modified, range);
+        const note = el('zone-note');
+        if (zone === 'black') {
+            modified = {h: 0, s: 0, b: 0};
+            sent = {h: 0, s: 0, b: 0};
+            note.textContent = 'Темнее порога черного: уйдет яркость 0, коррекция и ограничения не применяются.';
+        } else if (zone === 'gray') {
+            modified = {h: 0, s: 0, b: modified.b};
+            sent = {h: 0, s: 0, b: sent.b};
+            note.textContent = 'Насыщенность ниже порога серого: уйдет белый свет, корректируется только яркость.';
+        }
+        note.hidden = zone === 'color';
 
         el('swatch-source').style.background = sample.value;
         el('swatch-modified').style.background = rgbCss(modified);

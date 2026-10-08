@@ -157,10 +157,32 @@
 				</div>
 			</section>
 
+			<section aria-labelledby="group-zones" class="group">
+				<div class="group-head">
+					<h2 id="group-zones">Темные и серые кадры</h2>
+					<p>У почти черного и почти серого экрана оттенок случайный, поэтому такие кадры отправляются без цвета. Переход между черным, серым и цветным отправляется сразу, без учета допусков.</p>
+				</div>
+				<div class="fields">
+
+				<label class="field">
+					<span class="field-label">Порог черного</span>
+					<span class="input-wrap"><input inputmode="decimal" type="number" max="50" min="0" step="1" data-live th:errorclass="invalid" th:field="*{blackThreshold}"/><span class="unit">%</span></span>
+					<span class="field-hint">Если яркость ниже, уходит яркость 0: светильник можно выключить. 0 отключает.</span>
+					<span class="field-error" th:errors="*{blackThreshold}" th:if="${#fields.hasErrors('blackThreshold')}"></span>
+				</label>
+				<label class="field">
+					<span class="field-label">Порог серого</span>
+					<span class="input-wrap"><input inputmode="decimal" type="number" max="100" min="0" step="1" data-live th:errorclass="invalid" th:field="*{grayThreshold}"/><span class="unit">%</span></span>
+					<span class="field-hint">Если насыщенность ниже, уходит белый свет: тон и насыщенность 0, яркость корректируется как обычно. 0 отключает.</span>
+					<span class="field-error" th:errors="*{grayThreshold}" th:if="${#fields.hasErrors('grayThreshold')}"></span>
+				</label>
+				</div>
+			</section>
+
 			<section aria-labelledby="group-correction" class="group">
 				<div class="group-head">
 					<h2 id="group-correction">Коррекция цвета</h2>
-					<p>Сдвиг перед отправкой. Тон сдвигается по кругу, насыщенность и яркость упираются в 0 и 100.</p>
+					<p>Сдвиг перед отправкой, только для цветных кадров. Тон сдвигается по кругу, насыщенность и яркость упираются в 0 и 100.</p>
 				</div>
 				<div class="fields">
 
@@ -185,7 +207,7 @@
 			<section aria-labelledby="group-limits" class="group">
 				<div class="group-head">
 					<h2 id="group-limits">Ограничения</h2>
-					<p>Допустимые значения после коррекции. Например, минимальная насыщенность не даст лампе стать серой.</p>
+					<p>Допустимые значения после коррекции. На черные кадры не действуют, у серых ограничивается только яркость.</p>
 				</div>
 				<div class="fields range-fields">
 
@@ -250,6 +272,7 @@
 				<li><span class="swatch" id="swatch-modified"></span><span>После коррекции</span></li>
 				<li><span class="swatch" id="swatch-sent"></span><span>Отправится</span></li>
 			</ol>
+			<p class="zone-note" hidden id="zone-note"></p>
 			<div class="bars">
 				<div class="bar-row" data-channel="h">
 					<div class="bar-label"><span>Тон</span><span class="bar-value" id="value-h"></span></div>
