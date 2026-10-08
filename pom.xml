@@ -71,10 +71,15 @@
     </dependencies>
 
     <build>
+        <finalName>color-to-mqtt</finalName>
         <plugins>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <!-- Те же ограничения памяти, что в start.cmd, для mvn spring-boot:run. -->
+                    <jvmArguments>-Xms16m -Xmx128m -XX:+UseSerialGC -Xss512k</jvmArguments>
+                </configuration>
             </plugin>
         </plugins>
     </build>

@@ -1,12 +1,15 @@
 spring:
   application:
     name: ColorToMQTTApp
-  devtools:
-    restart:
-      enabled: true
   web:
     resources:
       static-locations: classpath:/static/
+server:
+  tomcat:
+    # Интерфейс открывает один человек: 200 потоков по умолчанию не нужны.
+    threads:
+      max: 8
+      min-spare: 1
 app:
   defaultSettings:
     screenHeight: 400
