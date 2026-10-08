@@ -122,4 +122,15 @@ class SettingsFormTest {
         assertThat(form.getBlackThreshold()).isEqualTo(5f);
         assertThat(form.getGrayThreshold()).isEqualTo(12f);
     }
+
+    @Test
+    void rejectsUnknownDetectorAndProcessor() {
+        var form = SettingsForm.from(TestProperties.defaults());
+        form.setDetector("java.lang.String");
+        form.setProcessor("java.lang.Object");
+
+        var messages = validator.validate(form).stream().map(v -> v.getMessage()).toList();
+
+        assertThat(messages).contains("Неизвестный способ расчета цвета", "Неизвестный порядок обхода");
+    }
 }

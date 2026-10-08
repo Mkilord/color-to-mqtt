@@ -2,7 +2,6 @@ package ru.mkilord.colortomqttapp.core.detector;
 
 import lombok.experimental.FieldDefaults;
 import lombok.extern.log4j.Log4j2;
-import ru.mkilord.colortomqttapp.core.AbstractFactory;
 import ru.mkilord.colortomqttapp.core.processor.Processor;
 
 import java.awt.*;
@@ -17,35 +16,28 @@ public final class AverageColorDetector implements ColorDetector {
     Processor processor;
 
     public AverageColorDetector(Properties properties) {
-        var processorAbstractFactory = new AbstractFactory<Processor>();
-        this.processor = processorAbstractFactory.get(Processor.PROCESSOR_KEY, properties);
+        this(Samples.processor(properties));
+    }
+
+    AverageColorDetector(Processor processor) {
+        this.processor = processor;
+    }
+
+    /**
+     * Обычное среднее по точкам в формате 0xRRGGBB.
+     */
+    static Color average(int[] samples) {
+        long r = 0, g = 0, b = 0;
+        for (var rgb : samples) {
+            r += Samples.red(rgb);
+            g += Samples.green(rgb);
+            b += Samples.blue(rgb);
+        }
+        return new Color((int) (r / samples.length), (int) (g / samples.length), (int) (b / samples.length));
     }
 
     public Color detect(BufferedImage image) {
-        class rgbCount {
-            float red, green, blue;
-            int count;
-        }
-        var rgbCount = new rgbCount();
-
-        processor.process(image.getWidth(), image.getHeight(), (x, y) -> {
-            var pixel = new Color(image.getRGB(x, y));
-            rgbCount.red += pixel.getRed();
-            rgbCount.green += pixel.getGreen();
-            rgbCount.blue += pixel.getBlue();
-            rgbCount.count++;
-        });
-
-        if (rgbCount.count == 0) {
-            // Область меньше клетки сетки: берем центральный пиксель.
-            return new Color(image.getRGB(image.getWidth() / 2, image.getHeight() / 2));
-        }
-
-        var averageRed = (int) (rgbCount.red / rgbCount.count);
-        var averageGreen = (int) (rgbCount.green / rgbCount.count);
-        var averageBlue = (int) (rgbCount.blue / rgbCount.count);
-
-        var color = new Color(averageRed, averageGreen, averageBlue);
+        var color = average(Samples.collect(processor, image));
         log.debug("Average color R:{}, G:{}, B:{}", color.getRed(), color.getGreen(), color.getBlue());
         return color;
     }

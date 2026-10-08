@@ -90,10 +90,97 @@ const ColorMath = (() => {
         return 'color';
     }
 
+    // ---- Расчет цвета кадра, как детекторы на сервере. Точки: [{r, g, b}] ----
+    const pkg = 'ru.mkilord.colortomqttapp.core.';
+    const DOMINANT = pkg + 'detector.DominantColorDetector';
+    const VIVID = pkg + 'detector.VividColorDetector';
+    const GRID = pkg + 'processor.GridProcessor';
+
+    // Точки обхода, как ChessProcessor и GridProcessor.
+    function samplePoints(processor, width, height, cell) {
+        const points = [];
+        for (let y = 0; y < height; y += cell) {
+            const chess = processor !== GRID;
+            const startX = chess ? ((y / cell) % 2 === 0 ? cell : 0) : 0;
+            for (let x = startX; x < width; x += chess ? cell * 2 : cell) {
+                points.push([x, y]);
+            }
+        }
+        return points;
+    }
+
+    function average(pixels) {
+        const sum = pixels.reduce((a, p) => ({r: a.r + p.r, g: a.g + p.g, b: a.b + p.b}), {r: 0, g: 0, b: 0});
+        const n = pixels.length;
+        return {r: Math.floor(sum.r / n), g: Math.floor(sum.g / n), b: Math.floor(sum.b / n)};
+    }
+
+    function weighted(pixels, weights) {
+        let r = 0, g = 0, b = 0, total = 0;
+        pixels.forEach((p, i) => {
+            r += p.r * weights[i];
+            g += p.g * weights[i];
+            b += p.b * weights[i];
+            total += weights[i];
+        });
+        return {color: {r: Math.floor(r / total), g: Math.floor(g / total), b: Math.floor(b / total)}, total};
+    }
+
+    // Возвращает цвет и номера точек, которые в него вошли.
+    function detect(detector, pixels, minSharePercent) {
+        const all = pixels.map((_, i) => i);
+        if (detector === VIVID) {
+            const weights = pixels.map(p => {
+                const hsb = rgbToHsb(p);
+                return hsb.s / 100 * hsb.b / 100;
+            });
+            const result = weighted(pixels, weights);
+            if (result.total < 0.01 * pixels.length) {
+                return {color: average(pixels), used: all, fallback: true};
+            }
+            return {color: result.color, used: all.filter(i => weights[i] > 0.05)};
+        }
+        if (detector === DOMINANT) {
+            const BINS = 24;
+            const bins = [];
+            const weights = [];
+            const binWeight = new Array(BINS).fill(0);
+            pixels.forEach((p, i) => {
+                const hsb = rgbToHsb(p);
+                if (hsb.s < 20 || hsb.b < 15) {
+                    bins[i] = -1;
+                    return;
+                }
+                bins[i] = Math.min(Math.floor(hsb.h / 360 * BINS), BINS - 1);
+                weights[i] = hsb.s / 100 * hsb.b / 100;
+                binWeight[bins[i]] += weights[i];
+            });
+            let best = -1, bestWeight = 0;
+            for (let bin = 0; bin < BINS; bin++) {
+                const group = binWeight[bin] + binWeight[(bin + 1) % BINS] + binWeight[(bin + BINS - 1) % BINS];
+                if (group > bestWeight) {
+                    bestWeight = group;
+                    best = bin;
+                }
+            }
+            const near = bin => {
+                const d = Math.abs(bin - best);
+                return Math.min(d, BINS - d) <= 1;
+            };
+            const used = best < 0 ? [] : all.filter(i => bins[i] >= 0 && near(bins[i]));
+            if (!used.length || used.length < minSharePercent / 100 * pixels.length) {
+                return {color: average(pixels), used: all, fallback: true};
+            }
+            const result = weighted(used.map(i => pixels[i]), used.map(i => weights[i]));
+            return {color: result.color, used};
+        }
+        return {color: average(pixels), used: all};
+    }
+
     // Как MQTTColorPublisher.payload: округление до целых.
     function payload(hsb) {
         return `{"hue":${Math.round(hsb.h)},"sat":${Math.round(hsb.s)},"brightness":${Math.round(hsb.b)}}`;
     }
 
-    return {hexToRgb, rgbToHex, rgbToHsb, hsbToRgb, modify, limit, zoneOf, payload, clamp};
+    return {hexToRgb, rgbToHex, rgbToHsb, hsbToRgb, modify, limit, zoneOf, samplePoints, detect, payload, clamp};
 })();

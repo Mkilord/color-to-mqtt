@@ -10,6 +10,13 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
+import ru.mkilord.colortomqttapp.core.detector.AverageColorDetector;
+import ru.mkilord.colortomqttapp.core.detector.ColorDetector;
+import ru.mkilord.colortomqttapp.core.detector.DominantColorDetector;
+import ru.mkilord.colortomqttapp.core.detector.VividColorDetector;
+import ru.mkilord.colortomqttapp.core.processor.ChessProcessor;
+import ru.mkilord.colortomqttapp.core.processor.GridProcessor;
+import ru.mkilord.colortomqttapp.core.processor.Processor;
 import ru.mkilord.colortomqttapp.core.tracker.DefaultColorStateTracker;
 import ru.mkilord.colortomqttapp.core.tracker.SimpleColorStateTracker;
 import ru.mkilord.colortomqttapp.core.tracker.StabilityGate;
@@ -36,6 +43,27 @@ public class SettingsForm {
         TRACKERS.put(ToleranceColorStateTracker.class.getName(), "По допускам H, S, B");
         TRACKERS.put(DefaultColorStateTracker.class.getName(), "По расстоянию в RGB (чувствительность)");
         TRACKERS.put(SimpleColorStateTracker.class.getName(), "Любое изменение");
+    }
+
+    /**
+     * Способы расчета цвета кадра.
+     */
+    public static final Map<String, String> DETECTORS = new LinkedHashMap<>();
+
+    static {
+        DETECTORS.put(DominantColorDetector.class.getName(), "Преобладающий цвет");
+        DETECTORS.put(VividColorDetector.class.getName(), "Среднее с упором на яркие цвета");
+        DETECTORS.put(AverageColorDetector.class.getName(), "Простое среднее");
+    }
+
+    /**
+     * Порядок обхода точек кадра.
+     */
+    public static final Map<String, String> PROCESSORS = new LinkedHashMap<>();
+
+    static {
+        PROCESSORS.put(ChessProcessor.class.getName(), "Шахматный порядок");
+        PROCESSORS.put(GridProcessor.class.getName(), "Каждая клетка");
     }
 
     @NotBlank(message = "Укажите адрес брокера")
@@ -87,6 +115,17 @@ public class SettingsForm {
 
     @NotBlank(message = "Выберите способ сравнения")
     private String stateTracker;
+
+    @NotBlank(message = "Выберите способ расчета")
+    private String detector;
+
+    @NotBlank(message = "Выберите порядок обхода")
+    private String processor;
+
+    @NotNull(message = "Укажите долю")
+    @DecimalMin(value = "0", message = "От 0")
+    @DecimalMax(value = "100", message = "До 100")
+    private Float dominantMinShare;
 
     @NotNull(message = "Укажите чувствительность")
     @Min(value = 0, message = "От 0")
@@ -168,6 +207,16 @@ public class SettingsForm {
     @DecimalMax(value = "100", message = "До 100")
     private Float maxBrightness;
 
+    @AssertTrue(message = "Неизвестный способ расчета цвета")
+    public boolean isDetectorKnown() {
+        return detector == null || DETECTORS.containsKey(detector);
+    }
+
+    @AssertTrue(message = "Неизвестный порядок обхода")
+    public boolean isProcessorKnown() {
+        return processor == null || PROCESSORS.containsKey(processor);
+    }
+
     @AssertTrue(message = "Неизвестный способ сравнения")
     public boolean isStateTrackerKnown() {
         return stateTracker == null || TRACKERS.containsKey(stateTracker);
@@ -201,6 +250,10 @@ public class SettingsForm {
         form.setScreenHeight(toInt(p.getProperty("screenHeight")));
         form.setCellSize(toInt(p.getProperty("cellSize")));
         form.setStateTracker(p.getProperty("stateTracker"));
+        form.setDetector(p.getProperty(ColorDetector.DETECTOR_KEY));
+        form.setProcessor(p.getProperty(Processor.PROCESSOR_KEY));
+        form.setDominantMinShare(toFloat(p.getProperty(DominantColorDetector.MIN_SHARE_KEY,
+                String.valueOf(DominantColorDetector.DEFAULT_MIN_SHARE))));
         form.setSensitivity(toInt(p.getProperty("sensitivity")));
         form.setHueTolerance(toFloat(p.getProperty("hueTolerance")));
         form.setSaturationTolerance(toFloat(p.getProperty("saturationTolerance")));
@@ -238,6 +291,9 @@ public class SettingsForm {
         p.setProperty("screenHeight", String.valueOf(screenHeight));
         p.setProperty("cellSize", String.valueOf(cellSize));
         p.setProperty("stateTracker", stateTracker);
+        p.setProperty(ColorDetector.DETECTOR_KEY, detector);
+        p.setProperty(Processor.PROCESSOR_KEY, processor);
+        p.setProperty(DominantColorDetector.MIN_SHARE_KEY, String.valueOf(dominantMinShare));
         p.setProperty("sensitivity", String.valueOf(sensitivity));
         p.setProperty("hueTolerance", String.valueOf(hueTolerance));
         p.setProperty("saturationTolerance", String.valueOf(saturationTolerance));

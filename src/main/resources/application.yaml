@@ -14,7 +14,8 @@ app:
     updatePeriod: 10 #ms
     holdTime: 150 #ms, сколько цвет должен продержаться перед отправкой
     processor: ru.mkilord.colortomqttapp.core.processor.ChessProcessor
-    detector: ru.mkilord.colortomqttapp.core.detector.AverageColorDetector
+    detector: ru.mkilord.colortomqttapp.core.detector.DominantColorDetector
+    dominantMinShare: 5 #%, меньше - цвета на экране нет, берется среднее
     screenAreaType: ru.mkilord.colortomqttapp.core.screenshoter.screenArea.DefaultScreenArea
     stateTracker: ru.mkilord.colortomqttapp.core.tracker.ToleranceColorStateTracker
     sensitivity: 30 #min 0 max 100

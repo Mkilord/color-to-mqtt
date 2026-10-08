@@ -145,6 +145,9 @@ class SettingsControllerTest {
         params.put("screenHeight", String.valueOf(form.getScreenHeight()));
         params.put("cellSize", String.valueOf(form.getCellSize()));
         params.put("stateTracker", form.getStateTracker());
+        params.put("detector", form.getDetector());
+        params.put("processor", form.getProcessor());
+        params.put("dominantMinShare", String.valueOf(form.getDominantMinShare()));
         params.put("sensitivity", String.valueOf(form.getSensitivity()));
         params.put("hueTolerance", String.valueOf(form.getHueTolerance()));
         params.put("saturationTolerance", String.valueOf(form.getSaturationTolerance()));

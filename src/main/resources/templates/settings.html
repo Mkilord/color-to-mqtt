@@ -57,7 +57,7 @@
 			<section aria-labelledby="group-capture" class="group">
 				<div class="group-head">
 					<h2 id="group-capture">Область захвата</h2>
-					<p>Прямоугольник в центре экрана, по которому считается средний цвет.</p>
+					<p>Прямоугольник в центре экрана, по которому считается цвет.</p>
 				</div>
 				<div class="fields">
 
@@ -74,7 +74,7 @@
 				<label class="field">
 					<span class="field-label">Шаг сетки</span>
 					<span class="input-wrap"><input inputmode="decimal" type="number" min="1" data-live th:errorclass="invalid" th:field="*{cellSize}"/><span class="unit">px</span></span>
-					<span class="field-hint">Берется один пиксель из клетки, клетки в шахматном порядке.</span>
+					<span class="field-hint">Из клетки берется один пиксель. Меньше шаг, точнее и дороже расчет.</span>
 					<span class="field-error" th:errors="*{cellSize}" th:if="${#fields.hasErrors('cellSize')}"></span>
 				</label>
 				<label class="field">
@@ -103,6 +103,39 @@
 							<span class="snapshot-average" hidden id="snapshot-average"><span class="chip" id="snapshot-average-chip"></span><span id="snapshot-average-text"></span></span>
 						</figcaption>
 					</figure>
+				</div>
+			</section>
+
+			<section aria-labelledby="group-detect" class="group">
+				<div class="group-head">
+					<h2 id="group-detect">Расчет цвета</h2>
+					<p>Как из точек области получается один цвет для ламп. Результат виден на снимке выше.</p>
+				</div>
+				<div class="fields">
+				<label class="field wide">
+					<span class="field-label">Способ расчета</span>
+					<span class="input-wrap"><select id="detector" data-live th:errorclass="invalid" th:field="*{detector}">
+						<option th:each="d : ${detectors}" th:text="${d.value}" th:value="${d.key}">способ</option>
+					</select></span>
+					<span class="field-hint" id="detector-help"></span>
+					<span class="field-error" th:errors="*{detector}" th:if="${#fields.hasErrors('detector')}"></span>
+					<span class="field-error" th:errors="*{detectorKnown}" th:if="${#fields.hasErrors('detectorKnown')}"></span>
+				</label>
+				<label class="field" data-for-detector="ru.mkilord.colortomqttapp.core.detector.DominantColorDetector">
+					<span class="field-label">Минимальная доля цвета</span>
+					<span class="input-wrap"><input inputmode="decimal" type="number" max="100" min="0" step="1" data-live th:errorclass="invalid" th:field="*{dominantMinShare}"/><span class="unit">%</span></span>
+					<span class="field-hint">Если цветных точек меньше, цвета на экране нет или он мелкий, и берется простое среднее.</span>
+					<span class="field-error" th:errors="*{dominantMinShare}" th:if="${#fields.hasErrors('dominantMinShare')}"></span>
+				</label>
+				<label class="field">
+					<span class="field-label">Порядок обхода</span>
+					<span class="input-wrap"><select id="processor" data-live th:errorclass="invalid" th:field="*{processor}">
+						<option th:each="p : ${processors}" th:text="${p.value}" th:value="${p.key}">порядок</option>
+					</select></span>
+					<span class="field-hint">В шахматном порядке точек вдвое меньше, чем в каждой клетке.</span>
+					<span class="field-error" th:errors="*{processor}" th:if="${#fields.hasErrors('processor')}"></span>
+					<span class="field-error" th:errors="*{processorKnown}" th:if="${#fields.hasErrors('processorKnown')}"></span>
+				</label>
 				</div>
 			</section>
 

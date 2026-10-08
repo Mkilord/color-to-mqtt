@@ -34,6 +34,16 @@ public class SettingsController {
     private final SettingsService settingsService;
     private final ColorService colorService;
 
+    @ModelAttribute("detectors")
+    public Map<String, String> detectors() {
+        return SettingsForm.DETECTORS;
+    }
+
+    @ModelAttribute("processors")
+    public Map<String, String> processors() {
+        return SettingsForm.PROCESSORS;
+    }
+
     @ModelAttribute("trackers")
     public Map<String, String> trackers() {
         return SettingsForm.TRACKERS;

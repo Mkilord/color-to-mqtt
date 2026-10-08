@@ -26,6 +26,23 @@
     };
     const tracker = el('tracker');
 
+    const DETECTOR_HELP = {
+        'ru.mkilord.colortomqttapp.core.detector.DominantColorDetector':
+            'Берется цвет, которого больше всего среди цветных точек. Темный фон и серые элементы не учитываются: красный объект на темном фоне даст красный, а не грязно-серый.',
+        'ru.mkilord.colortomqttapp.core.detector.VividColorDetector':
+            'Среднее, где яркие насыщенные точки весят больше темных и серых. Несколько цветов смешиваются.',
+        'ru.mkilord.colortomqttapp.core.detector.AverageColorDetector':
+            'Среднее по всем точкам. Темный фон и серые элементы делают цвет бледнее.'
+    };
+    const detector = el('detector');
+
+    function updateDetector() {
+        el('detector-help').textContent = DETECTOR_HELP[detector.value] || '';
+        form.querySelectorAll('[data-for-detector]').forEach(field => {
+            field.hidden = field.dataset.forDetector !== detector.value;
+        });
+    }
+
     function updateTracker() {
         el('tracker-help').textContent = TRACKER_HELP[tracker.value] || '';
         form.querySelectorAll('[data-for]').forEach(field => {
@@ -142,55 +159,42 @@
     let autoTimer = null;
     let loading = false;
 
-    // Те же точки, что обходит ChessProcessor на сервере.
-    function chessPoints(width, height, cell) {
-        const points = [];
-        for (let y = 0; y < height; y += cell) {
-            const startX = (y / cell) % 2 === 0 ? cell : 0;
-            for (let x = startX; x < width; x += cell * 2) {
-                points.push([x, y]);
-            }
-        }
-        return points;
-    }
-
     function drawSnapshot() {
         if (!lastImage) {
             return;
         }
         const image = lastImage;
-        canvas.width = image.naturalWidth;
-        canvas.height = image.naturalHeight;
+        const width = image.naturalWidth;
+        const height = image.naturalHeight;
+        canvas.width = width;
+        canvas.height = height;
         const ctx = canvas.getContext('2d');
         ctx.drawImage(image, 0, 0);
 
         const cell = Math.max(1, Math.round(num('cellSize')));
-        const points = chessPoints(image.naturalWidth, image.naturalHeight, cell);
-        const data = ctx.getImageData(0, 0, image.naturalWidth, image.naturalHeight).data;
-        let r = 0, g = 0, b = 0;
-        points.forEach(([x, y]) => {
-            const i = (y * image.naturalWidth + x) * 4;
-            r += data[i];
-            g += data[i + 1];
-            b += data[i + 2];
-        });
-        let average;
-        if (points.length) {
-            average = ColorMath.rgbToHex({r: Math.floor(r / points.length), g: Math.floor(g / points.length), b: Math.floor(b / points.length)});
-        } else {
-            const i = (Math.floor(image.naturalHeight / 2) * image.naturalWidth + Math.floor(image.naturalWidth / 2)) * 4;
-            average = ColorMath.rgbToHex({r: data[i], g: data[i + 1], b: data[i + 2]});
+        let points = ColorMath.samplePoints(el('processor').value, width, height, cell);
+        if (!points.length) {
+            points = [[Math.floor(width / 2), Math.floor(height / 2)]];
         }
+        const data = ctx.getImageData(0, 0, width, height).data;
+        const pixels = points.map(([x, y]) => {
+            const i = (y * width + x) * 4;
+            return {r: data[i], g: data[i + 1], b: data[i + 2]};
+        });
+        const result = ColorMath.detect(detector.value, pixels, num('dominantMinShare'));
+        const average = ColorMath.rgbToHex(result.color);
+        const usedSet = new Set(result.used);
 
         if (el('snapshot-grid').checked) {
             const radius = Math.max(1.5, image.naturalWidth / 250);
-            points.forEach(([x, y]) => {
+            points.forEach(([x, y], i) => {
+                const used = usedSet.has(i);
                 ctx.beginPath();
-                ctx.arc(x + 0.5, y + 0.5, radius, 0, Math.PI * 2);
-                ctx.fillStyle = 'rgba(255,255,255,0.9)';
+                ctx.arc(x + 0.5, y + 0.5, used ? radius : radius * 0.6, 0, Math.PI * 2);
+                ctx.fillStyle = used ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.25)';
                 ctx.fill();
                 ctx.lineWidth = 1;
-                ctx.strokeStyle = 'rgba(0,0,0,0.7)';
+                ctx.strokeStyle = used ? 'rgba(0,0,0,0.8)' : 'rgba(0,0,0,0.25)';
                 ctx.stroke();
             });
         }
@@ -198,7 +202,9 @@
         el('snapshot-empty').hidden = true;
         el('snapshot-average').hidden = false;
         el('snapshot-average-chip').style.background = average;
-        el('snapshot-average-text').textContent = `Средний цвет ${average}, точек: ${points.length || 1}`;
+        el('snapshot-average-text').textContent = result.fallback
+            ? `Цвет ${average}: преобладающего цвета нет, взято среднее по ${points.length} точкам`
+            : `Цвет ${average}, учтено точек: ${result.used.length} из ${points.length}`;
         sample.value = average;
         updatePreview();
     }
@@ -284,7 +290,7 @@
         if (event.target.name === 'screenWidth' || event.target.name === 'screenHeight') {
             updateScreenMap();
         }
-        if (event.target.name === 'cellSize') {
+        if (['cellSize', 'detector', 'processor', 'dominantMinShare'].includes(event.target.name)) {
             drawSnapshot();
         }
         updatePreview();
@@ -298,7 +304,13 @@
     });
 
     tracker.addEventListener('change', updateTracker);
+    detector.addEventListener('change', () => {
+        updateDetector();
+        drawSnapshot();
+    });
+    el('processor').addEventListener('change', drawSnapshot);
     sample.addEventListener('input', updatePreview);
     updateTracker();
+    updateDetector();
     updatePreview();
 })();
