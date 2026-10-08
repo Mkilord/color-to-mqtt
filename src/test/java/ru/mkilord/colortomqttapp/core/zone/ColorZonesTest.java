@@ -72,4 +72,14 @@ class ColorZonesTest {
         assertThat(fromEmpty.zoneOf(new Color(10, 10, 10))).isEqualTo(ColorZone.BLACK);
         assertThat(fromEmpty.zoneOf(new Color(100, 95, 95))).isEqualTo(ColorZone.GRAY);
     }
+
+    @Test
+    void whiteKelvinIsAddedOnlyForGray() {
+        var withKelvin = new ColorZones(5, 12, 5000);
+
+        assertThat(withKelvin.kelvinFor(new Color(120, 118, 118))).isEqualTo(5000);
+        assertThat(withKelvin.kelvinFor(Color.BLACK)).isNull();
+        assertThat(withKelvin.kelvinFor(new Color(200, 40, 40))).isNull();
+        assertThat(zones.kelvinFor(new Color(120, 118, 118))).isNull();
+    }
 }

@@ -153,6 +153,7 @@ class SettingsControllerTest {
         params.put("modifyBrightness", String.valueOf(form.getModifyBrightness()));
         params.put("blackThreshold", String.valueOf(form.getBlackThreshold()));
         params.put("grayThreshold", String.valueOf(form.getGrayThreshold()));
+        params.put("whiteKelvin", String.valueOf(form.getWhiteKelvin()));
         params.put("minHue", String.valueOf(form.getMinHue()));
         params.put("maxHue", String.valueOf(form.getMaxHue()));
         params.put("minSaturation", String.valueOf(form.getMinSaturation()));

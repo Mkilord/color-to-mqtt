@@ -127,6 +127,11 @@ public class SettingsForm {
     @DecimalMax(value = "100", message = "До 100")
     private Float grayThreshold;
 
+    @NotNull(message = "Укажите температуру")
+    @Min(value = 0, message = "От 0")
+    @Max(value = 10000, message = "До 10000")
+    private Integer whiteKelvin;
+
     @NotNull(message = "Укажите минимум")
     @DecimalMin(value = "0", message = "От 0")
     @DecimalMax(value = "360", message = "До 360")
@@ -200,6 +205,8 @@ public class SettingsForm {
                 String.valueOf(ColorZones.DEFAULT_BLACK_THRESHOLD))));
         form.setGrayThreshold(toFloat(p.getProperty(ColorZones.GRAY_THRESHOLD_KEY,
                 String.valueOf(ColorZones.DEFAULT_GRAY_THRESHOLD))));
+        form.setWhiteKelvin(toInt(p.getProperty(ColorZones.WHITE_KELVIN_KEY,
+                String.valueOf(ColorZones.DEFAULT_WHITE_KELVIN))));
         form.setMinHue(toFloat(p.getProperty("minHUE")));
         form.setMaxHue(toFloat(p.getProperty("maxHUE")));
         form.setMinSaturation(toFloat(p.getProperty("minSaturation")));
@@ -233,6 +240,7 @@ public class SettingsForm {
         p.setProperty("modifyBrightness", String.valueOf(modifyBrightness));
         p.setProperty(ColorZones.BLACK_THRESHOLD_KEY, String.valueOf(blackThreshold));
         p.setProperty(ColorZones.GRAY_THRESHOLD_KEY, String.valueOf(grayThreshold));
+        p.setProperty(ColorZones.WHITE_KELVIN_KEY, String.valueOf(whiteKelvin));
         p.setProperty("minHUE", String.valueOf(minHue));
         p.setProperty("maxHUE", String.valueOf(maxHue));
         p.setProperty("minSaturation", String.valueOf(minSaturation));

@@ -18,20 +18,32 @@ public final class ColorZones {
 
     public static final String BLACK_THRESHOLD_KEY = "blackThreshold";
     public static final String GRAY_THRESHOLD_KEY = "grayThreshold";
+    public static final String WHITE_KELVIN_KEY = "whiteKelvin";
     public static final float DEFAULT_BLACK_THRESHOLD = 5;
     public static final float DEFAULT_GRAY_THRESHOLD = 12;
+    public static final int DEFAULT_WHITE_KELVIN = 5000;
 
     private final float blackThreshold;
     private final float grayThreshold;
+    private final int whiteKelvin;
 
     public ColorZones(float blackThreshold, float grayThreshold) {
+        this(blackThreshold, grayThreshold, 0);
+    }
+
+    /**
+     * @param whiteKelvin температура, с которой отправляется серый; 0 не добавляет ее в сообщение
+     */
+    public ColorZones(float blackThreshold, float grayThreshold, int whiteKelvin) {
         this.blackThreshold = blackThreshold;
         this.grayThreshold = grayThreshold;
+        this.whiteKelvin = whiteKelvin;
     }
 
     public ColorZones(Properties properties) {
         this(read(properties, BLACK_THRESHOLD_KEY, DEFAULT_BLACK_THRESHOLD),
-                read(properties, GRAY_THRESHOLD_KEY, DEFAULT_GRAY_THRESHOLD));
+                read(properties, GRAY_THRESHOLD_KEY, DEFAULT_GRAY_THRESHOLD),
+                (int) read(properties, WHITE_KELVIN_KEY, DEFAULT_WHITE_KELVIN));
     }
 
     private static float read(Properties properties, String key, float defaultValue) {
@@ -78,5 +90,12 @@ public final class ColorZones {
             return new HSBColor(0, 0, result.getBrightness());
         }
         return result;
+    }
+
+    /**
+     * Температура белого для серого кадра, иначе null.
+     */
+    public Integer kelvinFor(Color color) {
+        return whiteKelvin > 0 && zoneOf(color) == ColorZone.GRAY ? whiteKelvin : null;
     }
 }

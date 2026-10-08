@@ -153,7 +153,7 @@
 						<div><dt>Топик</dt><dd class="mono" id="message-topic"></dd></div>
 						<div><dt>Тело</dt><dd><code class="mono" id="message-payload"></code></dd></div>
 					</dl>
-					<p class="message-note">Пример для проверочного цвета справа: <code>hue</code> тон в градусах 0..360, <code>sat</code> и <code>brightness</code> в процентах 0..100, все значения целые.</p>
+					<p class="message-note">Пример для проверочного цвета справа: <code>hue</code> тон в градусах 0..360, <code>sat</code> и <code>brightness</code> в процентах 0..100, все значения целые. Для серых кадров добавляется <code>kelvin</code>.</p>
 				</div>
 			</section>
 
@@ -175,6 +175,12 @@
 					<span class="input-wrap"><input inputmode="decimal" type="number" max="100" min="0" step="1" data-live th:errorclass="invalid" th:field="*{grayThreshold}"/><span class="unit">%</span></span>
 					<span class="field-hint">Если насыщенность ниже, уходит белый свет: тон и насыщенность 0, яркость корректируется как обычно. 0 отключает.</span>
 					<span class="field-error" th:errors="*{grayThreshold}" th:if="${#fields.hasErrors('grayThreshold')}"></span>
+				</label>
+				<label class="field">
+					<span class="field-label">Температура белого</span>
+					<span class="input-wrap"><input inputmode="numeric" type="number" max="10000" min="0" step="100" data-live th:errorclass="invalid" th:field="*{whiteKelvin}"/><span class="unit">K</span></span>
+					<span class="field-hint">Для серых кадров в сообщение добавляется <code>kelvin</code>. 2700 теплый, 5000 нейтральный, 6500 холодный. 0 не добавляет.</span>
+					<span class="field-error" th:errors="*{whiteKelvin}" th:if="${#fields.hasErrors('whiteKelvin')}"></span>
 				</label>
 				</div>
 			</section>
