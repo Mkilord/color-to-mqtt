@@ -22,6 +22,7 @@ import ru.mkilord.colortomqttapp.core.tracker.SimpleColorStateTracker;
 import ru.mkilord.colortomqttapp.core.tracker.StabilityGate;
 import ru.mkilord.colortomqttapp.core.tracker.ToleranceColorStateTracker;
 import ru.mkilord.colortomqttapp.core.zone.ColorZones;
+import ru.mkilord.colortomqttapp.service.ColorService;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -97,6 +98,11 @@ public class SettingsForm {
     @Min(value = 0, message = "От 0 мс")
     @Max(value = 5_000, message = "До 5000 мс")
     private Integer holdTime;
+
+    @NotNull(message = "Укажите паузу")
+    @Min(value = 0, message = "От 0 мс")
+    @Max(value = 5_000, message = "До 5000 мс")
+    private Integer idlePeriod;
 
     @NotNull(message = "Укажите ширину")
     @Min(value = 1, message = "От 1 px")
@@ -245,6 +251,7 @@ public class SettingsForm {
         form.setPasswordSet(savedPassword != null && !savedPassword.isEmpty());
         form.setTopic(p.getProperty("topic"));
         form.setUpdatePeriod(toInt(p.getProperty("updatePeriod")));
+        form.setIdlePeriod(toInt(p.getProperty(ColorService.IDLE_PERIOD_KEY, String.valueOf(ColorService.DEFAULT_IDLE_PERIOD))));
         form.setHoldTime(toInt(p.getProperty(StabilityGate.HOLD_TIME_KEY, String.valueOf(StabilityGate.DEFAULT_HOLD_TIME))));
         form.setScreenWidth(toInt(p.getProperty("screenWight")));
         form.setScreenHeight(toInt(p.getProperty("screenHeight")));
@@ -287,6 +294,7 @@ public class SettingsForm {
         p.setProperty("topic", topic.trim());
         p.setProperty("updatePeriod", String.valueOf(updatePeriod));
         p.setProperty(StabilityGate.HOLD_TIME_KEY, String.valueOf(holdTime));
+        p.setProperty(ColorService.IDLE_PERIOD_KEY, String.valueOf(idlePeriod));
         p.setProperty("screenWight", String.valueOf(screenWidth));
         p.setProperty("screenHeight", String.valueOf(screenHeight));
         p.setProperty("cellSize", String.valueOf(cellSize));

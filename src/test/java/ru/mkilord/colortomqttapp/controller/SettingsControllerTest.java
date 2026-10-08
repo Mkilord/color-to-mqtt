@@ -141,6 +141,7 @@ class SettingsControllerTest {
         params.put("topic", form.getTopic());
         params.put("updatePeriod", String.valueOf(form.getUpdatePeriod()));
         params.put("holdTime", String.valueOf(form.getHoldTime()));
+        params.put("idlePeriod", String.valueOf(form.getIdlePeriod()));
         params.put("screenWidth", String.valueOf(form.getScreenWidth()));
         params.put("screenHeight", String.valueOf(form.getScreenHeight()));
         params.put("cellSize", String.valueOf(form.getCellSize()));

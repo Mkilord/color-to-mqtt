@@ -45,6 +45,13 @@
 				<dt>Топик</dt>
 				<dd class="mono" id="topic" th:text="${status.topic()}">colorToMQTT</dd>
 			</div>
+			<div hidden id="performance-row">
+				<dt>Скорость</dt>
+				<dd>
+					<span id="performance-fps"></span>
+					<span class="muted" id="performance-detail"></span>
+				</dd>
+			</div>
 			<div>
 				<dt>Последнее сообщение</dt>
 				<dd>

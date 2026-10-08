@@ -83,6 +83,12 @@
 					<span class="field-hint">Меньше пауза, быстрее реакция, выше нагрузка.</span>
 					<span class="field-error" th:errors="*{updatePeriod}" th:if="${#fields.hasErrors('updatePeriod')}"></span>
 				</label>
+				<label class="field">
+					<span class="field-label">Пауза в покое</span>
+					<span class="input-wrap"><input inputmode="numeric" type="number" max="5000" min="0" step="10" th:errorclass="invalid" th:field="*{idlePeriod}"/><span class="unit">мс</span></span>
+					<span class="field-hint">Если экран не меняется 3 секунды, кадры снимаются реже. Первая смена после покоя запаздывает не больше этой паузы. 0 отключает.</span>
+					<span class="field-error" th:errors="*{idlePeriod}" th:if="${#fields.hasErrors('idlePeriod')}"></span>
+				</label>
 				</div>
 				<div class="capture-preview">
 					<figure class="screen-map">

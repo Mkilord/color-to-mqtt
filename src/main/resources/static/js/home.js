@@ -48,6 +48,15 @@
             setState(mqtt, status.connected ? 'подключен' : 'нет соединения', status.connected ? 'ok' : 'error');
         }
 
+        const perf = status.performance;
+        el('performance-row').hidden = !perf;
+        if (perf) {
+            el('performance-fps').textContent = perf.idle
+                ? `${perf.fps} кадров/с, экран не меняется`
+                : `${perf.fps} кадров/с`;
+            el('performance-detail').textContent = `снимок ${perf.captureMs} мс, расчет ${perf.processMs} мс`;
+        }
+
         el('last-payload').textContent = status.lastPayload || 'Еще не отправлялось';
         el('last-sent').textContent = status.lastSentAt ? `в ${formatTime(status.lastSentAt)}` : '';
 

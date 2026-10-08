@@ -21,7 +21,7 @@ Configuration:
   loggers:
     logger:
       - name: ru.mkilord.colortomqttapp.core.tracker
-        level: DEBUG
+        level: INFO
         additivity: false
         AppenderRef:
           - ref: Console

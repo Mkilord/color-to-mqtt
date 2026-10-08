@@ -1,7 +1,6 @@
 package ru.mkilord.colortomqttapp.core.detector;
 
 import lombok.experimental.FieldDefaults;
-import lombok.extern.log4j.Log4j2;
 import ru.mkilord.colortomqttapp.core.processor.Processor;
 
 import java.awt.*;
@@ -10,7 +9,6 @@ import java.util.Properties;
 
 import static lombok.AccessLevel.PRIVATE;
 
-@Log4j2
 @FieldDefaults(level = PRIVATE, makeFinal = true)
 public final class AverageColorDetector implements ColorDetector {
     Processor processor;
@@ -37,8 +35,6 @@ public final class AverageColorDetector implements ColorDetector {
     }
 
     public Color detect(BufferedImage image) {
-        var color = average(Samples.collect(processor, image));
-        log.debug("Average color R:{}, G:{}, B:{}", color.getRed(), color.getGreen(), color.getBlue());
-        return color;
+        return average(Samples.collect(processor, image));
     }
 }

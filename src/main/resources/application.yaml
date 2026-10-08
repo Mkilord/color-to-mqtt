@@ -12,6 +12,7 @@ app:
     screenHeight: 400
     screenWight: 400
     updatePeriod: 10 #ms
+    idlePeriod: 100 #ms, пауза между кадрами, если экран не меняется 3 с; 0 отключает
     holdTime: 150 #ms, сколько цвет должен продержаться перед отправкой
     processor: ru.mkilord.colortomqttapp.core.processor.ChessProcessor
     detector: ru.mkilord.colortomqttapp.core.detector.DominantColorDetector

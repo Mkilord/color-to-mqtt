@@ -91,7 +91,7 @@ public class ColorServiceImpl implements ColorService {
             var failure = startFailure;
             return new ColorStatus(false, toHex(Color.BLACK), settings.getProperty("broker"),
                     settings.getProperty("topic"), null, null, null,
-                    failure == null ? null : failure.message(), failure == null ? null : failure.at());
+                    failure == null ? null : failure.message(), failure == null ? null : failure.at(), null);
         }
         return pipeline.status();
     }
@@ -117,6 +117,11 @@ public class ColorServiceImpl implements ColorService {
         private final StabilityGate stability;
         private final ColorPublisher publisher;
         private final RepeatServiceImpl repeater;
+        private final FrameStats stats = new FrameStats();
+        private final IdleTracker idleTracker = new IdleTracker();
+        private final long updatePeriod;
+        private final long idlePeriod;
+        private volatile boolean idle;
 
         private volatile Failure captureFailure;
         private volatile Sent lastSent;
@@ -135,10 +140,12 @@ public class ColorServiceImpl implements ColorService {
                     zones, StabilityGate.holdMillis(properties), System::nanoTime);
             this.publisher = new MQTTColorPublisher(properties);
             this.repeater = new RepeatServiceImpl(properties);
+            this.updatePeriod = Long.parseLong(properties.getProperty("updatePeriod"));
+            this.idlePeriod = Long.parseLong(properties.getProperty(IDLE_PERIOD_KEY, String.valueOf(DEFAULT_IDLE_PERIOD)));
         }
 
         void start() {
-            repeater.repeat(this::processFrame);
+            repeater.repeat(this::processFrame, () -> idle ? Math.max(updatePeriod, idlePeriod) : updatePeriod);
         }
 
         void stop() {
@@ -153,7 +160,8 @@ public class ColorServiceImpl implements ColorService {
             var sent = lastSent;
             return new ColorStatus(true, toHex(tracker.getCurrentColor()), properties.getProperty("broker"),
                     properties.getProperty("topic"), publisher.isConnected(),
-                    sent == null ? null : sent.payload(), sent == null ? null : sent.at(), error, errorAt);
+                    sent == null ? null : sent.payload(), sent == null ? null : sent.at(), error, errorAt,
+                    stats.snapshot(idle && idlePeriod > updatePeriod));
         }
 
         /**
@@ -181,7 +189,12 @@ public class ColorServiceImpl implements ColorService {
 
         private void processFrame() {
             try {
-                var color = zones.normalize(detector.detect(screenShooter.getScreenshot()));
+                var start = System.nanoTime();
+                var screenshot = screenShooter.getScreenshot();
+                var captured = System.nanoTime();
+                var detected = detector.detect(screenshot);
+                idle = idleTracker.update(detected, captured);
+                var color = zones.normalize(detected);
                 captureFailure = null;
                 if ((firstFrame || stability.isStable(color)) && hasChanged(color)) {
                     var hsb = zones.toOutput(color, modifier, limit);
@@ -190,6 +203,8 @@ public class ColorServiceImpl implements ColorService {
                         lastSent = new Sent(MQTTColorPublisher.payload(hsb), Instant.now());
                     }
                 }
+                var end = System.nanoTime();
+                stats.record(captured - start, end - captured, end);
             } catch (RuntimeException e) {
                 if (captureFailure == null) {
                     log.error("Ошибка захвата экрана", e);

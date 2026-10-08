@@ -1,7 +1,6 @@
 package ru.mkilord.colortomqttapp.core.screenshoter;
 
 import lombok.experimental.FieldDefaults;
-import lombok.extern.log4j.Log4j2;
 import ru.mkilord.colortomqttapp.core.AbstractFactory;
 import ru.mkilord.colortomqttapp.core.screenshoter.screenArea.ScreenArea;
 
@@ -11,7 +10,6 @@ import java.util.Properties;
 
 import static lombok.AccessLevel.PRIVATE;
 
-@Log4j2
 @FieldDefaults(level = PRIVATE, makeFinal = true)
 public final class DefaultScreenShooter implements ScreenShooter {
 
@@ -31,7 +29,6 @@ public final class DefaultScreenShooter implements ScreenShooter {
 
     @Override
     public BufferedImage getScreenshot() {
-        log.debug("Get screenshot.");
         return robot.createScreenCapture(screenArea);
     }
 }

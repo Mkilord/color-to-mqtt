@@ -48,6 +48,7 @@ mvn spring-boot:run
 
 - текущий цвет на мониторе и его значения в HEX, RGB и HSB;
 - состояние захвата и соединения с брокером, топик, последнее отправленное сообщение и время отправки;
+- скорость захвата: кадры в секунду, время снимка экрана и время расчета;
 - кнопка запуска и остановки захвата;
 - сообщение об ошибке, если брокер недоступен или не удался снимок экрана, с подсказкой, что проверить.
 
@@ -75,6 +76,7 @@ mvn spring-boot:run
 |---|---|
 | `screenWight`, `screenHeight` | Размер области в центре экрана, px |
 | `updatePeriod` | Пауза между кадрами, мс |
+| `idlePeriod` | Пауза между кадрами, если экран не меняется 3 секунды, мс. Снимает нагрузку на статичном рабочем столе. 0 отключает |
 | `holdTime` | Сглаживание вспышек, мс: сколько новый цвет должен продержаться перед отправкой. 0 отключает. Со способом сравнения «любое изменение» шум сбрасывает отсчет, поэтому задержку лучше использовать с допусками |
 | `cellSize` | Шаг сетки, px |
 | `detector` | Способ расчета цвета: `DominantColorDetector`, `VividColorDetector`, `AverageColorDetector` |
@@ -95,7 +97,7 @@ mvn spring-boot:run
 
 | Запрос | Ответ |
 |---|---|
-| `GET /api/status` | Состояние захвата: `running`, `color`, `broker`, `topic`, `connected`, `lastPayload`, `lastSentAt`, `error`, `errorAt` |
+| `GET /api/status` | Состояние захвата: `running`, `color`, `broker`, `topic`, `connected`, `lastPayload`, `lastSentAt`, `error`, `errorAt`, `performance` (`fps`, `captureMs`, `processMs`, `idle`) |
 | `GET /api/screen` | Размер экрана `{"width":..., "height":...}`, 503 без графической среды |
 | `GET /settings/preview_image?width=&height=` | Снимок области захвата заданного размера, JPEG |
 
