@@ -14,17 +14,28 @@ public class DefaultColorModifier implements ColorModifier {
     public static final String MODIFY_SATURATION_KEY = "modifySaturation";
     public static final String MODIFY_BRIGHTNESS_KEY = "modifyBrightness";
     public static final String SATURATION_BOOST_KEY = "saturationBoost";
+    /**
+     * Поправка тона для шести опорных цветов: красный 0, желтый 60, зеленый 120,
+     * голубой 180, синий 240, пурпурный 300. Между опорными точками поправка плавно меняется.
+     */
+    public static final String[] HUE_SHIFT_KEYS = {
+            "hueShiftRed", "hueShiftYellow", "hueShiftGreen", "hueShiftCyan", "hueShiftBlue", "hueShiftMagenta"};
 
     float modifyHue;
     float modifySaturation;
     float modifyBrightness;
     float saturationBoost;
+    float[] hueShifts;
 
     public DefaultColorModifier(Properties properties) {
         this.modifyHue = Float.parseFloat(properties.getProperty(MODIFY_HUE_KEY));
         this.modifySaturation = Float.parseFloat(properties.getProperty(MODIFY_SATURATION_KEY));
         this.modifyBrightness = Float.parseFloat(properties.getProperty(MODIFY_BRIGHTNESS_KEY));
         this.saturationBoost = Float.parseFloat(properties.getProperty(SATURATION_BOOST_KEY, "0"));
+        this.hueShifts = new float[HUE_SHIFT_KEYS.length];
+        for (int i = 0; i < HUE_SHIFT_KEYS.length; i++) {
+            hueShifts[i] = Float.parseFloat(properties.getProperty(HUE_SHIFT_KEYS[i], "0"));
+        }
     }
 
     private float applyModifyFor(float value, float modification, float max) {
@@ -49,9 +60,22 @@ public class DefaultColorModifier implements ColorModifier {
         return saturation + (100 - saturation) * boost / 100;
     }
 
+    /**
+     * Поправка тона по опорным цветам. Светодиоды ламп передают цвета не так, как монитор:
+     * например, зеленый уходит в бирюзовый. Поправка для зеленого сдвигает только оттенки
+     * рядом с зеленым и не трогает красный и синий.
+     */
+    static float mapHue(float hue, float[] shifts) {
+        var h = ((hue % 360) + 360) % 360;
+        var sector = Math.min((int) (h / 60), 5);
+        var t = (h - sector * 60) / 60;
+        var shift = shifts[sector] * (1 - t) + shifts[(sector + 1) % 6] * t;
+        return shiftHue(h, shift);
+    }
+
     @Override
     public HSBColor modify(HSBColor color) {
-        var h = shiftHue(color.getHue(), modifyHue);
+        var h = shiftHue(mapHue(color.getHue(), hueShifts), modifyHue);
         var s = applyModifyFor(boostSaturation(color.getSaturation(), saturationBoost), modifySaturation, 100);
         var b = applyModifyFor(color.getBrightness(), modifyBrightness, 100);
         return new HSBColor(h, s, b);

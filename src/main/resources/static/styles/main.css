@@ -1060,3 +1060,70 @@ h1, h2, h3 {
     color: var(--ink);
     font-size: 13px;
 }
+
+.hue-shifts {
+    display: grid;
+    gap: 12px;
+    padding-top: 16px;
+    border-top: 1px solid var(--line);
+}
+
+.hue-shifts-head h3 {
+    margin: 0 0 4px;
+    font-size: 15px;
+}
+
+.hue-shifts-head p {
+    margin: 0;
+}
+
+.hue-shift-fields {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 12px 10px;
+}
+
+@media (max-width: 720px) {
+    .hue-shift-fields {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+.hue-dot {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    margin-right: 6px;
+    border-radius: 50%;
+    vertical-align: baseline;
+}
+
+.sample-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+}
+
+.chip-button {
+    width: 26px;
+    height: 26px;
+    padding: 0;
+    border: 2px solid var(--surface);
+    border-radius: 50%;
+    background: var(--chip);
+    box-shadow: 0 0 0 1px var(--line);
+    cursor: pointer;
+}
+
+.chip-button:hover {
+    box-shadow: 0 0 0 2px var(--ink);
+}
+
+.chip-button:focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: 2px;
+}
+
+#send-test {
+    margin-left: auto;
+}

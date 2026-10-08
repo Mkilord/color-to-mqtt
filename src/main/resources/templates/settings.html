@@ -253,6 +253,44 @@
 					<span class="field-error" th:errors="*{saturationBoost}" th:if="${#fields.hasErrors('saturationBoost')}"></span>
 				</label>
 				</div>
+				<div class="hue-shifts">
+					<div class="hue-shifts-head">
+						<h3>Оттенки ламп</h3>
+						<p class="muted small">Поправка тона для каждого цвета отдельно, если лампы передают его не так, как монитор. Например, зеленый уходит в бирюзовый: поставьте зеленому -15...-25. Между цветами поправка меняется плавно. Подбирайте с кнопкой «Отправить на лампы» в панели проверки.</p>
+					</div>
+					<div class="fields hue-shift-fields">
+					<label class="field">
+						<span class="field-label"><span class="hue-dot" style="background:#ff2020"></span>Красный</span>
+						<span class="input-wrap"><input inputmode="decimal" type="number" max="60" min="-60" step="1" data-live th:errorclass="invalid" th:field="*{hueShiftRed}"/><span class="unit">°</span></span>
+						<span class="field-error" th:errors="*{hueShiftRed}" th:if="${#fields.hasErrors('hueShiftRed')}"></span>
+					</label>
+					<label class="field">
+						<span class="field-label"><span class="hue-dot" style="background:#ffd800"></span>Желтый</span>
+						<span class="input-wrap"><input inputmode="decimal" type="number" max="60" min="-60" step="1" data-live th:errorclass="invalid" th:field="*{hueShiftYellow}"/><span class="unit">°</span></span>
+						<span class="field-error" th:errors="*{hueShiftYellow}" th:if="${#fields.hasErrors('hueShiftYellow')}"></span>
+					</label>
+					<label class="field">
+						<span class="field-label"><span class="hue-dot" style="background:#20d020"></span>Зеленый</span>
+						<span class="input-wrap"><input inputmode="decimal" type="number" max="60" min="-60" step="1" data-live th:errorclass="invalid" th:field="*{hueShiftGreen}"/><span class="unit">°</span></span>
+						<span class="field-error" th:errors="*{hueShiftGreen}" th:if="${#fields.hasErrors('hueShiftGreen')}"></span>
+					</label>
+					<label class="field">
+						<span class="field-label"><span class="hue-dot" style="background:#10d0e0"></span>Голубой</span>
+						<span class="input-wrap"><input inputmode="decimal" type="number" max="60" min="-60" step="1" data-live th:errorclass="invalid" th:field="*{hueShiftCyan}"/><span class="unit">°</span></span>
+						<span class="field-error" th:errors="*{hueShiftCyan}" th:if="${#fields.hasErrors('hueShiftCyan')}"></span>
+					</label>
+					<label class="field">
+						<span class="field-label"><span class="hue-dot" style="background:#2040ff"></span>Синий</span>
+						<span class="input-wrap"><input inputmode="decimal" type="number" max="60" min="-60" step="1" data-live th:errorclass="invalid" th:field="*{hueShiftBlue}"/><span class="unit">°</span></span>
+						<span class="field-error" th:errors="*{hueShiftBlue}" th:if="${#fields.hasErrors('hueShiftBlue')}"></span>
+					</label>
+					<label class="field">
+						<span class="field-label"><span class="hue-dot" style="background:#e020e0"></span>Пурпурный</span>
+						<span class="input-wrap"><input inputmode="decimal" type="number" max="60" min="-60" step="1" data-live th:errorclass="invalid" th:field="*{hueShiftMagenta}"/><span class="unit">°</span></span>
+						<span class="field-error" th:errors="*{hueShiftMagenta}" th:if="${#fields.hasErrors('hueShiftMagenta')}"></span>
+					</label>
+					</div>
+				</div>
 			</section>
 
 			<section aria-labelledby="group-limits" class="group">
@@ -318,6 +356,16 @@
 				</label>
 				<button class="button small" id="sample-current" type="button">Взять текущий</button>
 			</div>
+			<div class="sample-actions" aria-label="Чистые цвета для проверки">
+				<button class="chip-button" data-sample="#ff0000" style="--chip:#ff0000" title="Красный" type="button"></button>
+				<button class="chip-button" data-sample="#ffff00" style="--chip:#ffff00" title="Желтый" type="button"></button>
+				<button class="chip-button" data-sample="#00ff00" style="--chip:#00ff00" title="Зеленый" type="button"></button>
+				<button class="chip-button" data-sample="#00ffff" style="--chip:#00ffff" title="Голубой" type="button"></button>
+				<button class="chip-button" data-sample="#0000ff" style="--chip:#0000ff" title="Синий" type="button"></button>
+				<button class="chip-button" data-sample="#ff00ff" style="--chip:#ff00ff" title="Пурпурный" type="button"></button>
+				<button class="button small" id="send-test" type="button">Отправить на лампы</button>
+			</div>
+			<p class="muted small">Отправка берет значения из формы, даже несохраненные. Пока захват идет, следующая смена экрана заменит цвет.</p>
 			<ol class="swatch-flow" aria-label="Цвет на каждом шаге">
 				<li><span class="swatch" id="swatch-source"></span><span>Экран</span></li>
 				<li><span class="swatch" id="swatch-modified"></span><span>После коррекции</span></li>

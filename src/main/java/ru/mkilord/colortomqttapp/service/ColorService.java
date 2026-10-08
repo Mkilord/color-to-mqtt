@@ -1,5 +1,7 @@
 package ru.mkilord.colortomqttapp.service;
 
+import ru.mkilord.colortomqttapp.core.HSBColor;
+
 import java.awt.Color;
 
 public interface ColorService {
@@ -22,4 +24,12 @@ public interface ColorService {
     Color getCurrentColor();
 
     ColorStatus getStatus();
+
+    /**
+     * Отправляет цвет на лампы как есть, без коррекции: для подбора поправок на глаз.
+     * Если захват идет, следующее изменение экрана заменит этот цвет.
+     *
+     * @return отправленное сообщение
+     */
+    String sendTestColor(HSBColor color);
 }

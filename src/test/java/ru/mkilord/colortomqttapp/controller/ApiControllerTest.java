@@ -5,6 +5,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.http.MediaType;
+import ru.mkilord.colortomqttapp.core.HSBColor;
 import ru.mkilord.colortomqttapp.service.ColorService;
 import ru.mkilord.colortomqttapp.service.ColorStatus;
 
@@ -13,6 +15,7 @@ import java.time.Instant;
 import static org.hamcrest.Matchers.nullValue;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -52,5 +55,32 @@ class ApiControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.running").value(false))
                 .andExpect(jsonPath("$.error").value("Не удалось подключиться"));
+    }
+
+    @Test
+    void testColorIsSentAsIs() throws Exception {
+        when(colorService.sendTestColor(new HSBColor(120, 100, 40))).thenReturn("{\"hue\":120,\"sat\":100,\"brightness\":40}");
+
+        mvc.perform(post("/api/test-color").contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"hue\":120,\"sat\":100,\"brightness\":40}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.payload").value("{\"hue\":120,\"sat\":100,\"brightness\":40}"));
+    }
+
+    @Test
+    void testColorOutOfRangeIsRejected() throws Exception {
+        mvc.perform(post("/api/test-color").contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"hue\":400,\"sat\":100,\"brightness\":40}"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void testColorReportsBrokerError() throws Exception {
+        when(colorService.sendTestColor(new HSBColor(0, 100, 50))).thenThrow(new IllegalStateException("Нет соединения с брокером"));
+
+        mvc.perform(post("/api/test-color").contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"hue\":0,\"sat\":100,\"brightness\":50}"))
+                .andExpect(status().isServiceUnavailable())
+                .andExpect(jsonPath("$.error").value("Не удалось отправить: Нет соединения с брокером"));
     }
 }

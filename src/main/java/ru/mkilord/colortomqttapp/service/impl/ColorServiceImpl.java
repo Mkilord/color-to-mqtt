@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
 import ru.mkilord.colortomqttapp.core.AbstractFactory;
+import ru.mkilord.colortomqttapp.core.HSBColor;
 import ru.mkilord.colortomqttapp.core.detector.ColorDetector;
 import ru.mkilord.colortomqttapp.core.limit.ColorLimit;
 import ru.mkilord.colortomqttapp.core.limit.DefaultColorLimit;
@@ -94,6 +95,29 @@ public class ColorServiceImpl implements ColorService {
                     failure == null ? null : failure.message(), failure == null ? null : failure.at(), null);
         }
         return pipeline.status();
+    }
+
+    @Override
+    public String sendTestColor(HSBColor color) {
+        ColorPublisher running;
+        synchronized (this) {
+            running = pipeline == null ? null : pipeline.publisher;
+        }
+        if (running != null) {
+            if (!running.isConnected()) {
+                throw new IllegalStateException("Нет соединения с брокером");
+            }
+            running.publish(color);
+            return MQTTColorPublisher.payload(color);
+        }
+        try (var publisher = new MQTTColorPublisher(settingsService.loadOrElseLoadDefault())) {
+            if (!publisher.isConnected()) {
+                var error = publisher.getLastError();
+                throw new IllegalStateException(error == null ? "Нет соединения с брокером" : error);
+            }
+            publisher.publish(color);
+            return MQTTColorPublisher.payload(color);
+        }
     }
 
     static String toHex(Color color) {

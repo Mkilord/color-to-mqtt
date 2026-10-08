@@ -55,4 +55,32 @@ class DefaultColorModifierTest {
 
         assertThat(new DefaultColorModifier(props).modify(new HSBColor(10, 65, 50)).getSaturation()).isEqualTo(65);
     }
+
+    @Test
+    void greenShiftMovesOnlyHuesNearGreen() {
+        var shifts = new float[]{0, 0, -20, 0, 0, 0};
+
+        assertThat(DefaultColorModifier.mapHue(120, shifts)).isCloseTo(100, within(0.001f));
+        assertThat(DefaultColorModifier.mapHue(135, shifts)).isCloseTo(120, within(0.001f));
+        assertThat(DefaultColorModifier.mapHue(90, shifts)).isCloseTo(80, within(0.001f));
+        assertThat(DefaultColorModifier.mapHue(0, shifts)).isZero();
+        assertThat(DefaultColorModifier.mapHue(240, shifts)).isCloseTo(240, within(0.001f));
+    }
+
+    @Test
+    void redShiftWrapsAroundZero() {
+        var shifts = new float[]{-10, 0, 0, 0, 0, 0};
+
+        assertThat(DefaultColorModifier.mapHue(0, shifts)).isCloseTo(350, within(0.001f));
+        assertThat(DefaultColorModifier.mapHue(330, shifts)).isCloseTo(325, within(0.001f));
+    }
+
+    @Test
+    void hueShiftsAreReadFromSettings() {
+        var props = TestProperties.defaults();
+        props.setProperty("modifyHue", "0");
+        props.setProperty("hueShiftGreen", "-20");
+
+        assertThat(new DefaultColorModifier(props).modify(new HSBColor(120, 80, 50)).getHue()).isCloseTo(100, within(0.001f));
+    }
 }

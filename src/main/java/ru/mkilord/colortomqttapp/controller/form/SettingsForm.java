@@ -173,6 +173,36 @@ public class SettingsForm {
     @DecimalMax(value = "100", message = "До 100")
     private Float saturationBoost;
 
+    @NotNull(message = "Укажите поправку")
+    @DecimalMin(value = "-60", message = "От -60")
+    @DecimalMax(value = "60", message = "До 60")
+    private Float hueShiftRed;
+
+    @NotNull(message = "Укажите поправку")
+    @DecimalMin(value = "-60", message = "От -60")
+    @DecimalMax(value = "60", message = "До 60")
+    private Float hueShiftYellow;
+
+    @NotNull(message = "Укажите поправку")
+    @DecimalMin(value = "-60", message = "От -60")
+    @DecimalMax(value = "60", message = "До 60")
+    private Float hueShiftGreen;
+
+    @NotNull(message = "Укажите поправку")
+    @DecimalMin(value = "-60", message = "От -60")
+    @DecimalMax(value = "60", message = "До 60")
+    private Float hueShiftCyan;
+
+    @NotNull(message = "Укажите поправку")
+    @DecimalMin(value = "-60", message = "От -60")
+    @DecimalMax(value = "60", message = "До 60")
+    private Float hueShiftBlue;
+
+    @NotNull(message = "Укажите поправку")
+    @DecimalMin(value = "-60", message = "От -60")
+    @DecimalMax(value = "60", message = "До 60")
+    private Float hueShiftMagenta;
+
     @NotNull(message = "Укажите порог")
     @DecimalMin(value = "0", message = "От 0")
     @DecimalMax(value = "50", message = "До 50")
@@ -269,6 +299,12 @@ public class SettingsForm {
         form.setModifySaturation(toFloat(p.getProperty("modifySaturation")));
         form.setModifyBrightness(toFloat(p.getProperty("modifyBrightness")));
         form.setSaturationBoost(toFloat(p.getProperty("saturationBoost", "0")));
+        form.setHueShiftRed(toFloat(p.getProperty("hueShiftRed", "0")));
+        form.setHueShiftYellow(toFloat(p.getProperty("hueShiftYellow", "0")));
+        form.setHueShiftGreen(toFloat(p.getProperty("hueShiftGreen", "0")));
+        form.setHueShiftCyan(toFloat(p.getProperty("hueShiftCyan", "0")));
+        form.setHueShiftBlue(toFloat(p.getProperty("hueShiftBlue", "0")));
+        form.setHueShiftMagenta(toFloat(p.getProperty("hueShiftMagenta", "0")));
         form.setBlackThreshold(toFloat(p.getProperty(ColorZones.BLACK_THRESHOLD_KEY,
                 String.valueOf(ColorZones.DEFAULT_BLACK_THRESHOLD))));
         form.setGrayThreshold(toFloat(p.getProperty(ColorZones.GRAY_THRESHOLD_KEY,
@@ -310,6 +346,12 @@ public class SettingsForm {
         p.setProperty("modifySaturation", String.valueOf(modifySaturation));
         p.setProperty("modifyBrightness", String.valueOf(modifyBrightness));
         p.setProperty("saturationBoost", String.valueOf(saturationBoost));
+        p.setProperty("hueShiftRed", String.valueOf(hueShiftRed));
+        p.setProperty("hueShiftYellow", String.valueOf(hueShiftYellow));
+        p.setProperty("hueShiftGreen", String.valueOf(hueShiftGreen));
+        p.setProperty("hueShiftCyan", String.valueOf(hueShiftCyan));
+        p.setProperty("hueShiftBlue", String.valueOf(hueShiftBlue));
+        p.setProperty("hueShiftMagenta", String.valueOf(hueShiftMagenta));
         p.setProperty(ColorZones.BLACK_THRESHOLD_KEY, String.valueOf(blackThreshold));
         p.setProperty(ColorZones.GRAY_THRESHOLD_KEY, String.valueOf(grayThreshold));
         p.setProperty("minHUE", String.valueOf(minHue));

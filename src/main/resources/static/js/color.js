@@ -61,9 +61,20 @@ const ColorMath = (() => {
 
     const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
 
-    // Как DefaultColorModifier: усиление насыщенности, затем сдвиг.
+    // Как DefaultColorModifier.mapHue: поправка тона по шести опорным цветам.
+    function mapHue(h, shifts) {
+        const hue = ((h % 360) + 360) % 360;
+        const sector = Math.min(Math.floor(hue / 60), 5);
+        const t = (hue - sector * 60) / 60;
+        const shift = shifts[sector] * (1 - t) + shifts[(sector + 1) % 6] * t;
+        let result = (hue + shift) % 360;
+        return result < 0 ? result + 360 : result;
+    }
+
+    // Как DefaultColorModifier: поправка оттенков, усиление насыщенности, затем сдвиг.
     function modify(hsb, shift) {
-        let hue = (hsb.h + shift.h) % 360;
+        const mapped = shift.hueShifts ? mapHue(hsb.h, shift.hueShifts) : hsb.h;
+        let hue = (mapped + shift.h) % 360;
         if (hue < 0) {
             hue += 360;
         }
@@ -182,5 +193,5 @@ const ColorMath = (() => {
         return `{"hue":${Math.round(hsb.h)},"sat":${Math.round(hsb.s)},"brightness":${Math.round(hsb.b)}}`;
     }
 
-    return {hexToRgb, rgbToHex, rgbToHsb, hsbToRgb, modify, limit, zoneOf, samplePoints, detect, payload, clamp};
+    return {hexToRgb, rgbToHex, rgbToHsb, hsbToRgb, mapHue, modify, limit, zoneOf, samplePoints, detect, payload, clamp};
 })();

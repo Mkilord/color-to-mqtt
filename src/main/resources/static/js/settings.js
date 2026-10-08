@@ -77,7 +77,8 @@
             minBrightness: num('minBrightness'), maxBrightness: num('maxBrightness')
         };
         const zone = ColorMath.zoneOf(source, {black: num('blackThreshold'), gray: num('grayThreshold')});
-        let modified = ColorMath.modify(source, {h: num('modifyHue'), s: num('modifySaturation'), b: num('modifyBrightness'), boost: num('saturationBoost')});
+        let modified = ColorMath.modify(source, {h: num('modifyHue'), s: num('modifySaturation'), b: num('modifyBrightness'), boost: num('saturationBoost'),
+            hueShifts: ['hueShiftRed', 'hueShiftYellow', 'hueShiftGreen', 'hueShiftCyan', 'hueShiftBlue', 'hueShiftMagenta'].map(num)});
         let sent = ColorMath.limit(modified, range);
         const note = el('zone-note');
         if (zone === 'black') {
@@ -109,7 +110,45 @@
 
         el('message-topic').textContent = form.elements['topic'].value || 'не задан';
         el('message-payload').textContent = ColorMath.payload(sent);
+        lastSent = sent;
     }
+
+    let lastSent = null;
+
+    document.querySelectorAll('[data-sample]').forEach(button => {
+        button.addEventListener('click', () => {
+            sample.value = button.dataset.sample;
+            updatePreview();
+        });
+    });
+
+    el('send-test').addEventListener('click', async () => {
+        if (!lastSent) {
+            return;
+        }
+        const button = el('send-test');
+        button.disabled = true;
+        try {
+            const response = await fetch('/api/test-color', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    hue: Math.round(lastSent.h),
+                    sat: Math.round(lastSent.s),
+                    brightness: Math.round(lastSent.b)
+                })
+            });
+            const result = await response.json();
+            if (!response.ok) {
+                throw new Error(result.error || 'HTTP ' + response.status);
+            }
+            showToast('Отправлено: ' + result.payload);
+        } catch (e) {
+            showToast(e.message, 'error');
+        } finally {
+            button.disabled = false;
+        }
+    });
 
     el('sample-current').addEventListener('click', async () => {
         try {

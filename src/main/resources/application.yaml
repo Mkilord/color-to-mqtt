@@ -31,6 +31,13 @@ app:
     modifySaturation: 0
     modifyBrightness: 0
     saturationBoost: 30 #%, приближает насыщенность к 100
+    # Поправка тона для опорных цветов, градусы; между ними плавно
+    hueShiftRed: 0
+    hueShiftYellow: 0
+    hueShiftGreen: 0
+    hueShiftCyan: 0
+    hueShiftBlue: 0
+    hueShiftMagenta: 0
 
     blackThreshold: 5 #%, ниже отправляется яркость 0
     grayThreshold: 12 #%, ниже отправляется насыщенность 0
