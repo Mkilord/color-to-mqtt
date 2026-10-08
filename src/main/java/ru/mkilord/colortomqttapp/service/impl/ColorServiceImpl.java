@@ -15,6 +15,7 @@ import ru.mkilord.colortomqttapp.core.publisher.MQTTColorPublisher;
 import ru.mkilord.colortomqttapp.core.screenshoter.DefaultScreenShooter;
 import ru.mkilord.colortomqttapp.core.screenshoter.ScreenShooter;
 import ru.mkilord.colortomqttapp.core.tracker.ColorStateTracker;
+import ru.mkilord.colortomqttapp.core.tracker.StabilityGate;
 import ru.mkilord.colortomqttapp.core.zone.ColorZones;
 import ru.mkilord.colortomqttapp.service.ColorService;
 import ru.mkilord.colortomqttapp.service.ColorStatus;
@@ -113,6 +114,7 @@ public class ColorServiceImpl implements ColorService {
         private final ColorModifier modifier;
         private final ColorLimit limit;
         private final ColorZones zones;
+        private final StabilityGate stability;
         private final ColorPublisher publisher;
         private final RepeatServiceImpl repeater;
 
@@ -128,6 +130,9 @@ public class ColorServiceImpl implements ColorService {
             this.modifier = new DefaultColorModifier(properties);
             this.limit = new DefaultColorLimit(properties);
             this.zones = new ColorZones(properties);
+            this.stability = new StabilityGate(
+                    new AbstractFactory<ColorStateTracker>().get(ColorStateTracker.STATE_TRACKER_KEY, properties),
+                    zones, StabilityGate.holdMillis(properties), System::nanoTime);
             this.publisher = new MQTTColorPublisher(properties);
             this.repeater = new RepeatServiceImpl(properties);
         }
@@ -153,7 +158,8 @@ public class ColorServiceImpl implements ColorService {
 
         /**
          * Переход между черным, серым и цветным отправляется всегда, даже если он меньше допусков:
-         * иначе светильник не погаснет при затемнении экрана. Первый кадр после запуска
+         * иначе светильник не погаснет при затемнении экрана. Сюда попадают только цвета,
+         * продержавшиеся holdTime мс, см. {@link StabilityGate}. Первый кадр после запуска
          * отправляется всегда, чтобы светильник сразу пришел в состояние экрана.
          */
         private boolean hasChanged(Color color) {
@@ -177,7 +183,7 @@ public class ColorServiceImpl implements ColorService {
             try {
                 var color = zones.normalize(detector.detect(screenShooter.getScreenshot()));
                 captureFailure = null;
-                if (hasChanged(color)) {
+                if ((firstFrame || stability.isStable(color)) && hasChanged(color)) {
                     var hsb = zones.toOutput(color, modifier, limit);
                     publisher.publish(hsb);
                     if (publisher.isConnected()) {

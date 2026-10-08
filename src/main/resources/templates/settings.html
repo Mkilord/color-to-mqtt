@@ -143,6 +143,12 @@
 					<span class="field-hint">Процент от максимального расстояния в RGB.</span>
 					<span class="field-error" th:errors="*{sensitivity}" th:if="${#fields.hasErrors('sensitivity')}"></span>
 				</label>
+				<label class="field">
+					<span class="field-label">Сглаживание вспышек</span>
+					<span class="input-wrap"><input inputmode="numeric" type="number" max="5000" min="0" step="10" th:errorclass="invalid" th:field="*{holdTime}"/><span class="unit">мс</span></span>
+					<span class="field-hint">Новый цвет уходит, только если продержался столько времени. Более короткие вспышки пропускаются, лампы не мигают. 0 отключает.</span>
+					<span class="field-error" th:errors="*{holdTime}" th:if="${#fields.hasErrors('holdTime')}"></span>
+				</label>
 				</div>
 				<div aria-labelledby="message-title" class="message-window" role="group">
 					<div class="message-head">
@@ -160,7 +166,7 @@
 			<section aria-labelledby="group-zones" class="group">
 				<div class="group-head">
 					<h2 id="group-zones">Темные и серые кадры</h2>
-					<p>У почти черного и почти серого экрана оттенок случайный, поэтому такие кадры отправляются без цвета. Переход между черным, серым и цветным отправляется сразу, без учета допусков.</p>
+					<p>У почти черного и почти серого экрана оттенок случайный, поэтому такие кадры отправляются без цвета. Переход между черным, серым и цветным отправляется без учета допусков, если новое состояние продержалось время сглаживания.</p>
 				</div>
 				<div class="fields">
 

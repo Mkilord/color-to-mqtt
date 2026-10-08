@@ -12,6 +12,7 @@ import jakarta.validation.constraints.Size;
 import lombok.Data;
 import ru.mkilord.colortomqttapp.core.tracker.DefaultColorStateTracker;
 import ru.mkilord.colortomqttapp.core.tracker.SimpleColorStateTracker;
+import ru.mkilord.colortomqttapp.core.tracker.StabilityGate;
 import ru.mkilord.colortomqttapp.core.tracker.ToleranceColorStateTracker;
 import ru.mkilord.colortomqttapp.core.zone.ColorZones;
 
@@ -63,6 +64,11 @@ public class SettingsForm {
     @Min(value = 1, message = "От 1 мс")
     @Max(value = 10_000, message = "До 10000 мс")
     private Integer updatePeriod;
+
+    @NotNull(message = "Укажите время")
+    @Min(value = 0, message = "От 0 мс")
+    @Max(value = 5_000, message = "До 5000 мс")
+    private Integer holdTime;
 
     @NotNull(message = "Укажите ширину")
     @Min(value = 1, message = "От 1 px")
@@ -190,6 +196,7 @@ public class SettingsForm {
         form.setPasswordSet(savedPassword != null && !savedPassword.isEmpty());
         form.setTopic(p.getProperty("topic"));
         form.setUpdatePeriod(toInt(p.getProperty("updatePeriod")));
+        form.setHoldTime(toInt(p.getProperty(StabilityGate.HOLD_TIME_KEY, String.valueOf(StabilityGate.DEFAULT_HOLD_TIME))));
         form.setScreenWidth(toInt(p.getProperty("screenWight")));
         form.setScreenHeight(toInt(p.getProperty("screenHeight")));
         form.setCellSize(toInt(p.getProperty("cellSize")));
@@ -226,6 +233,7 @@ public class SettingsForm {
         }
         p.setProperty("topic", topic.trim());
         p.setProperty("updatePeriod", String.valueOf(updatePeriod));
+        p.setProperty(StabilityGate.HOLD_TIME_KEY, String.valueOf(holdTime));
         p.setProperty("screenWight", String.valueOf(screenWidth));
         p.setProperty("screenHeight", String.valueOf(screenHeight));
         p.setProperty("cellSize", String.valueOf(cellSize));
