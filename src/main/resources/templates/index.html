@@ -46,25 +46,25 @@
 			<div>
 				<dt>Брокер</dt>
 				<dd>
-					<span class="mono" id="broker" th:text="${status.broker()}">tcp://localhost:1883</span>
+					<span class="mono ellipsis" id="broker" th:text="${status.broker()}">tcp://localhost:1883</span>
 					<span class="state" id="mqtt-state" hidden></span>
 				</dd>
 			</div>
 			<div>
 				<dt>Топик</dt>
-				<dd class="mono" id="topic" th:text="${status.topic()}">colorToMQTT</dd>
+				<dd class="mono" id="topic"><span class="ellipsis" id="topic-text" th:text="${status.topic()}">colorToMQTT</span></dd>
 			</div>
-			<div hidden id="performance-row">
+			<div id="performance-row">
 				<dt>Скорость</dt>
-				<dd>
-					<span id="performance-fps"></span>
-					<span class="muted" id="performance-detail"></span>
+				<dd class="stack">
+					<span class="ellipsis" id="performance-fps">—</span>
+					<span class="muted small ellipsis" id="performance-detail">появится после запуска</span>
 				</dd>
 			</div>
 			<div>
 				<dt>Последнее сообщение</dt>
 				<dd>
-					<code class="payload" id="last-payload">Еще не отправлялось</code>
+					<code class="payload ellipsis" id="last-payload">Еще не отправлялось</code>
 					<span class="muted" id="last-sent"></span>
 				</dd>
 			</div>
@@ -85,6 +85,7 @@
 	</section>
 </main>
 
+<footer th:replace="~{fragments/layout :: footer}"></footer>
 <div th:replace="~{fragments/layout :: toast}"></div>
 <script src="/js/color.js"></script>
 <script src="/js/common.js"></script>

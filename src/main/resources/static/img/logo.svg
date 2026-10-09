@@ -1,14 +1,16 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
   <defs>
-    <linearGradient id="screen" x1="0" y1="0" x2="1" y2="1">
+    <linearGradient id="glass" x1="0.15" y1="0.1" x2="0.85" y2="0.9">
       <stop offset="0" stop-color="#ff5f6d"/>
-      <stop offset="0.35" stop-color="#ffc371"/>
-      <stop offset="0.65" stop-color="#47c9a0"/>
+      <stop offset="0.38" stop-color="#ffc371"/>
+      <stop offset="0.66" stop-color="#47c9a0"/>
       <stop offset="1" stop-color="#4f7cff"/>
     </linearGradient>
   </defs>
-  <rect x="3" y="6" width="20" height="14" rx="2.5" fill="url(#screen)"/>
-  <rect x="3" y="6" width="20" height="14" rx="2.5" fill="none" stroke="#1b2130" stroke-width="1.6"/>
-  <path d="M10 24.5h6M13 20v4.5" stroke="#1b2130" stroke-width="1.6" stroke-linecap="round"/>
-  <path d="M25.6 9.6a4.2 4.2 0 0 1 0 6.8M28 7.4a7.6 7.6 0 0 1 0 11.2" fill="none" stroke="#1b2130" stroke-width="1.6" stroke-linecap="round"/>
+  <rect width="32" height="32" rx="8" fill="#1b2130"/>
+  <rect x="0.5" y="0.5" width="31" height="31" rx="7.5" fill="none" stroke="#fff" stroke-opacity="0.1"/>
+  <path d="M16 4.6a8.4 8.4 0 0 0-4.9 15.2c.7.5 1.1 1.3 1.1 2.1v.6h7.6v-.6c0-.8.4-1.6 1.1-2.1A8.4 8.4 0 0 0 16 4.6z" fill="url(#glass)"/>
+  <path d="M12.2 7.9a6 6 0 0 0-1.6 3.4" fill="none" stroke="#fff" stroke-opacity="0.75" stroke-width="1.5" stroke-linecap="round"/>
+  <rect x="12.4" y="23.6" width="7.2" height="1.9" rx="0.95" fill="#e7eaf0"/>
+  <rect x="13.6" y="26.2" width="4.8" height="1.8" rx="0.9" fill="#e7eaf0"/>
 </svg>

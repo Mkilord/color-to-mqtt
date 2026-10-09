@@ -66,7 +66,7 @@
         const changed = advancedInputs().filter(input => !isDefault(input)).length;
         el('advanced-changed').textContent = changed
             ? `Изменено от умолчаний: ${changed}`
-            : 'Все расширенные настройки по умолчанию';
+            : 'Все по умолчанию';
         el('advanced-reset').hidden = !changed;
     }
 
@@ -90,7 +90,12 @@
     }
     // Ошибка в скрытом поле не должна прятаться.
     setAdvanced(storedAdvanced || !!form.querySelector('[data-advanced] .invalid'), false);
-    advancedToggle.addEventListener('change', () => setAdvanced(advancedToggle.checked));
+    advancedToggle.addEventListener('change', () => {
+        setAdvanced(advancedToggle.checked);
+        if (advancedToggle.checked) {
+            el('advanced-group').scrollIntoView({behavior: 'smooth', block: 'start'});
+        }
+    });
 
     el('advanced-reset').addEventListener('click', () => {
         form.querySelectorAll('[data-advanced] [name]').forEach(input => {
@@ -597,8 +602,8 @@
     el('profile-activate').addEventListener('click', async () => {
         try {
             await postJson('/api/profiles/activate', {name: profile});
-            el('profile-activate').hidden = true;
-            el('profile-active-badge').hidden = false;
+            el('profile-usage-other').hidden = true;
+            el('profile-usage-current').hidden = false;
             showToast(`Профиль «${profile}» активен`);
         } catch (e) {
             showToast(e.message, 'error');

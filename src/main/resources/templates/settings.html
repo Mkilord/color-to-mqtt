@@ -6,33 +6,31 @@
 
 <main class="settings" id="settings">
 	<div class="settings-main">
-		<div class="settings-top">
-			<h1 class="page-title">Настройки</h1>
-			<div class="profile-bar" role="group" aria-label="Профиль">
+		<h1 class="page-title">Настройки</h1>
+
+		<section aria-labelledby="profile-title" class="profile-card">
+			<div class="profile-card-main">
 				<label class="profile-select">
-					<span class="field-label">Профиль</span>
+					<span class="field-label" id="profile-title">Профиль</span>
 					<span class="input-wrap"><select id="profile-select">
 						<option th:each="p : ${profiles}" th:selected="${p == profile}" th:text="${p}" th:value="${p}">Профиль</option>
 					</select></span>
 				</label>
-				<span class="state" data-kind="ok" id="profile-active-badge" th:hidden="${profile != activeProfile}">Активный</span>
-				<button class="button small" id="profile-activate" th:hidden="${profile == activeProfile}" type="button">Сделать активным</button>
 				<div class="profile-actions">
-					<button class="button small" id="profile-new" type="button">Новый</button>
-					<button class="button small" id="profile-rename" type="button">Переименовать</button>
-					<button class="button small ghost" id="profile-delete" type="button">Удалить</button>
+					<button class="button" id="profile-new" type="button">Новый профиль</button>
+					<button class="button ghost" id="profile-rename" type="button">Переименовать</button>
+					<button class="button ghost danger-text" id="profile-delete" type="button">Удалить</button>
 				</div>
 			</div>
-			<label class="switch">
-				<input id="advanced-toggle" role="switch" type="checkbox"/>
-				<span class="switch-track" aria-hidden="true"></span>
-				<span>Расширенные настройки</span>
-			</label>
-			<span class="advanced-state" data-advanced>
-				<span class="muted small" id="advanced-changed"></span>
-				<button class="link-button" hidden id="advanced-reset" type="button">Вернуть умолчания</button>
-			</span>
-		</div>
+			<p class="profile-usage" id="profile-usage-current" th:hidden="${profile != activeProfile}">
+				<span class="tag">Используется</span>
+				Захват сейчас идет с этим профилем. Сменить его можно и на главной.
+			</p>
+			<p class="profile-usage" id="profile-usage-other" th:hidden="${profile == activeProfile}">
+				Сейчас используется другой профиль, «<span id="profile-active-name" th:text="${activeProfile}">Основной</span>».
+				<button class="link-button" id="profile-activate" type="button">Использовать этот</button>
+			</p>
+		</section>
 
 		<p class="flash" role="status" th:if="${message}" th:text="${message}">Настройки сохранены</p>
 
@@ -96,32 +94,6 @@
 					<span class="input-wrap"><input inputmode="decimal" type="number" min="1" data-live th:errorclass="invalid" th:field="*{screenHeight}"/><span class="unit">px</span></span>
 					<span class="field-error" th:errors="*{screenHeight}" th:if="${#fields.hasErrors('screenHeight')}"></span>
 				</label>
-				<label class="field" data-advanced>
-					<span class="field-label">Шаг сетки</span>
-					<span class="input-wrap"><input inputmode="decimal" type="number" min="1" data-live th:errorclass="invalid" th:field="*{cellSize}"/><span class="unit">px</span></span>
-					<span class="field-hint">Из клетки берется один пиксель. Меньше шаг, точнее и дороже расчет.</span>
-					<span class="field-error" th:errors="*{cellSize}" th:if="${#fields.hasErrors('cellSize')}"></span>
-				</label>
-				<label class="field" data-advanced>
-					<span class="field-label">Порядок обхода</span>
-					<span class="input-wrap"><select id="processor" data-live th:errorclass="invalid" th:field="*{processor}">
-						<option th:each="p : ${processors}" th:text="${p.value}" th:value="${p.key}">порядок</option>
-					</select></span>
-					<span class="field-hint">В шахматном порядке точек вдвое меньше.</span>
-					<span class="field-error" th:errors="*{processor}" th:if="${#fields.hasErrors('processor')}"></span>
-				</label>
-				<label class="field" data-advanced>
-					<span class="field-label">Пауза между кадрами</span>
-					<span class="input-wrap"><input inputmode="decimal" type="number" min="1" th:errorclass="invalid" th:field="*{updatePeriod}"/><span class="unit">мс</span></span>
-					<span class="field-hint">Меньше пауза, быстрее реакция и выше нагрузка. 25-40 мс хватает.</span>
-					<span class="field-error" th:errors="*{updatePeriod}" th:if="${#fields.hasErrors('updatePeriod')}"></span>
-				</label>
-				<label class="field" data-advanced>
-					<span class="field-label">Пауза в покое</span>
-					<span class="input-wrap"><input inputmode="decimal" type="number" max="5000" min="0" step="10" th:errorclass="invalid" th:field="*{idlePeriod}"/><span class="unit">мс</span></span>
-					<span class="field-hint">Если экран не меняется 3 секунды, кадры снимаются реже. 0 отключает.</span>
-					<span class="field-error" th:errors="*{idlePeriod}" th:if="${#fields.hasErrors('idlePeriod')}"></span>
-				</label>
 				</div>
 				<figure class="screen-map">
 					<div class="screen-map-frame" id="screen-map">
@@ -129,41 +101,6 @@
 					</div>
 					<figcaption id="screen-map-caption">Положение области на экране</figcaption>
 				</figure>
-				</div>
-			</section>
-
-			<section aria-labelledby="group-detect" class="group" data-advanced>
-				<div class="group-head">
-					<h2 id="group-detect">Распознавание</h2>
-					<p>Как из точек области получается один цвет. Проверяйте на снимке справа.</p>
-				</div>
-				<div class="fields">
-				<label class="field wide">
-					<span class="field-label">Способ расчета</span>
-					<span class="input-wrap"><select id="detector" data-live th:errorclass="invalid" th:field="*{detector}">
-						<option th:each="d : ${detectors}" th:text="${d.value}" th:value="${d.key}">способ</option>
-					</select></span>
-					<span class="field-hint" id="detector-help"></span>
-					<span class="field-error" th:errors="*{detector}" th:if="${#fields.hasErrors('detector')}"></span>
-				</label>
-				<label class="field" data-for-detector="ru.mkilord.colortomqttapp.core.detector.DominantColorDetector">
-					<span class="field-label">Минимальная доля цвета</span>
-					<span class="input-wrap"><input inputmode="decimal" type="number" max="100" min="0" step="1" data-live th:errorclass="invalid" th:field="*{dominantMinShare}"/><span class="unit">%</span></span>
-					<span class="field-hint">Если цветных точек меньше, берется простое среднее.</span>
-					<span class="field-error" th:errors="*{dominantMinShare}" th:if="${#fields.hasErrors('dominantMinShare')}"></span>
-				</label>
-				<label class="field">
-					<span class="field-label">Порог черного</span>
-					<span class="input-wrap"><input inputmode="decimal" type="number" max="50" min="0" step="1" data-live th:errorclass="invalid" th:field="*{blackThreshold}"/><span class="unit">%</span></span>
-					<span class="field-hint">Темнее уходит яркость 0, лампы гаснут. 0 отключает.</span>
-					<span class="field-error" th:errors="*{blackThreshold}" th:if="${#fields.hasErrors('blackThreshold')}"></span>
-				</label>
-				<label class="field">
-					<span class="field-label">Порог серого</span>
-					<span class="input-wrap"><input inputmode="decimal" type="number" max="100" min="0" step="1" data-live th:errorclass="invalid" th:field="*{grayThreshold}"/><span class="unit">%</span></span>
-					<span class="field-hint">Бледнее уходит белый в цветном режиме. 0 отключает.</span>
-					<span class="field-error" th:errors="*{grayThreshold}" th:if="${#fields.hasErrors('grayThreshold')}"></span>
-				</label>
 				</div>
 			</section>
 
@@ -224,13 +161,112 @@
 					</label>
 					</div>
 				</div>
-				<div class="subgroup" data-advanced>
+			</section>
+
+			<section aria-labelledby="group-send" class="group">
+				<div class="group-head">
+					<h2 id="group-send">Отправка</h2>
+					<p>Когда новый цвет уходит в MQTT.</p>
+				</div>
+				<div class="fields">
+				<label class="field">
+					<span class="field-label">Сглаживание вспышек</span>
+					<span class="input-wrap"><input inputmode="decimal" type="number" max="5000" min="0" step="10" th:errorclass="invalid" th:field="*{holdTime}"/><span class="unit">мс</span></span>
+					<span class="field-hint">Новый цвет уходит, только если продержался столько времени. Короткие вспышки пропускаются. 0 отключает.</span>
+					<span class="field-error" th:errors="*{holdTime}" th:if="${#fields.hasErrors('holdTime')}"></span>
+				</label>
+				</div>
+			</section>
+
+			<section aria-labelledby="group-advanced" class="group advanced-group" id="advanced-group">
+				<div class="advanced-head">
+					<label class="switch">
+						<input id="advanced-toggle" role="switch" type="checkbox"/>
+						<span class="switch-track" aria-hidden="true"></span>
+						<span class="advanced-title" id="group-advanced">Расширенные настройки</span>
+					</label>
+					<span class="advanced-state">
+						<span class="muted small" id="advanced-changed"></span>
+						<button class="link-button" hidden id="advanced-reset" type="button">Вернуть умолчания</button>
+					</span>
+				</div>
+				<p class="muted small advanced-intro">Обычно их менять не нужно: значения по умолчанию подобраны под большинство случаев. Параметры, отличные от умолчаний, отмечены точкой.</p>
+				<div class="advanced-body" data-advanced>
+				<div class="subgroup">
+					<div class="subgroup-head">
+						<h3>Захват</h3>
+						<p class="muted small">Как часто и по каким точкам снимается область.</p>
+					</div>
+					<div class="fields">
+				<label class="field">
+					<span class="field-label">Шаг сетки</span>
+					<span class="input-wrap"><input inputmode="decimal" type="number" min="1" data-live th:errorclass="invalid" th:field="*{cellSize}"/><span class="unit">px</span></span>
+					<span class="field-hint">Из клетки берется один пиксель. Меньше шаг, точнее и дороже расчет.</span>
+					<span class="field-error" th:errors="*{cellSize}" th:if="${#fields.hasErrors('cellSize')}"></span>
+				</label>
+				<label class="field">
+					<span class="field-label">Порядок обхода</span>
+					<span class="input-wrap"><select id="processor" data-live th:errorclass="invalid" th:field="*{processor}">
+						<option th:each="p : ${processors}" th:text="${p.value}" th:value="${p.key}">порядок</option>
+					</select></span>
+					<span class="field-hint">В шахматном порядке точек вдвое меньше.</span>
+					<span class="field-error" th:errors="*{processor}" th:if="${#fields.hasErrors('processor')}"></span>
+				</label>
+				<label class="field">
+					<span class="field-label">Пауза между кадрами</span>
+					<span class="input-wrap"><input inputmode="decimal" type="number" min="1" th:errorclass="invalid" th:field="*{updatePeriod}"/><span class="unit">мс</span></span>
+					<span class="field-hint">Меньше пауза, быстрее реакция и выше нагрузка. 25-40 мс хватает.</span>
+					<span class="field-error" th:errors="*{updatePeriod}" th:if="${#fields.hasErrors('updatePeriod')}"></span>
+				</label>
+				<label class="field">
+					<span class="field-label">Пауза в покое</span>
+					<span class="input-wrap"><input inputmode="decimal" type="number" max="5000" min="0" step="10" th:errorclass="invalid" th:field="*{idlePeriod}"/><span class="unit">мс</span></span>
+					<span class="field-hint">Если экран не меняется 3 секунды, кадры снимаются реже. 0 отключает.</span>
+					<span class="field-error" th:errors="*{idlePeriod}" th:if="${#fields.hasErrors('idlePeriod')}"></span>
+				</label>
+					</div>
+				</div>
+				<div class="subgroup">
+					<div class="subgroup-head">
+						<h3>Распознавание</h3>
+						<p class="muted small">Как из точек области получается один цвет. Проверяйте на снимке справа.</p>
+					</div>
+					<div class="fields">
+				<label class="field wide">
+					<span class="field-label">Способ расчета</span>
+					<span class="input-wrap"><select id="detector" data-live th:errorclass="invalid" th:field="*{detector}">
+						<option th:each="d : ${detectors}" th:text="${d.value}" th:value="${d.key}">способ</option>
+					</select></span>
+					<span class="field-hint" id="detector-help"></span>
+					<span class="field-error" th:errors="*{detector}" th:if="${#fields.hasErrors('detector')}"></span>
+				</label>
+				<label class="field" data-for-detector="ru.mkilord.colortomqttapp.core.detector.DominantColorDetector">
+					<span class="field-label">Минимальная доля цвета</span>
+					<span class="input-wrap"><input inputmode="decimal" type="number" max="100" min="0" step="1" data-live th:errorclass="invalid" th:field="*{dominantMinShare}"/><span class="unit">%</span></span>
+					<span class="field-hint">Если цветных точек меньше, берется простое среднее.</span>
+					<span class="field-error" th:errors="*{dominantMinShare}" th:if="${#fields.hasErrors('dominantMinShare')}"></span>
+				</label>
+				<label class="field">
+					<span class="field-label">Порог черного</span>
+					<span class="input-wrap"><input inputmode="decimal" type="number" max="50" min="0" step="1" data-live th:errorclass="invalid" th:field="*{blackThreshold}"/><span class="unit">%</span></span>
+					<span class="field-hint">Темнее уходит яркость 0, лампы гаснут. 0 отключает.</span>
+					<span class="field-error" th:errors="*{blackThreshold}" th:if="${#fields.hasErrors('blackThreshold')}"></span>
+				</label>
+				<label class="field">
+					<span class="field-label">Порог серого</span>
+					<span class="input-wrap"><input inputmode="decimal" type="number" max="100" min="0" step="1" data-live th:errorclass="invalid" th:field="*{grayThreshold}"/><span class="unit">%</span></span>
+					<span class="field-hint">Бледнее уходит белый в цветном режиме. 0 отключает.</span>
+					<span class="field-error" th:errors="*{grayThreshold}" th:if="${#fields.hasErrors('grayThreshold')}"></span>
+				</label>
+					</div>
+				</div>
+				<div class="subgroup">
 					<div class="subgroup-head">
 						<h3>Сдвиг и диапазоны</h3>
 						<p class="muted small">Сдвиг применяется ко всем цветным кадрам, затем значения ограничиваются диапазонами. На черные кадры не действует.</p>
 					</div>
 					<div class="fields range-fields">
-					<label class="field">
+				<label class="field">
 					<span class="field-label">Сдвиг тона</span>
 					<span class="input-wrap"><input inputmode="decimal" type="number" step="1" data-live th:errorclass="invalid" th:field="*{modifyHue}"/><span class="unit">°</span></span>
 					<span class="field-error" th:errors="*{modifyHue}" th:if="${#fields.hasErrors('modifyHue')}"></span>
@@ -272,21 +308,13 @@
 				</label>
 					</div>
 				</div>
-			</section>
-
-			<section aria-labelledby="group-send" class="group">
-				<div class="group-head">
-					<h2 id="group-send">Отправка</h2>
-					<p>Когда новый цвет уходит в MQTT.</p>
-				</div>
-				<div class="fields">
-				<label class="field">
-					<span class="field-label">Сглаживание вспышек</span>
-					<span class="input-wrap"><input inputmode="decimal" type="number" max="5000" min="0" step="10" th:errorclass="invalid" th:field="*{holdTime}"/><span class="unit">мс</span></span>
-					<span class="field-hint">Новый цвет уходит, только если продержался столько времени. Короткие вспышки пропускаются. 0 отключает.</span>
-					<span class="field-error" th:errors="*{holdTime}" th:if="${#fields.hasErrors('holdTime')}"></span>
-				</label>
-				<label class="field wide" data-advanced>
+				<div class="subgroup">
+					<div class="subgroup-head">
+						<h3>Сравнение цветов</h3>
+						<p class="muted small">Когда новый цвет считается отличным от отправленного.</p>
+					</div>
+					<div class="fields">
+				<label class="field wide">
 					<span class="field-label">Способ сравнения</span>
 					<span class="input-wrap"><select id="tracker" th:errorclass="invalid" th:field="*{stateTracker}">
 						<option th:each="tracker : ${trackers}" th:text="${tracker.value}" th:value="${tracker.key}">способ</option>
@@ -294,28 +322,30 @@
 					<span class="field-hint" id="tracker-help"></span>
 					<span class="field-error" th:errors="*{stateTracker}" th:if="${#fields.hasErrors('stateTracker')}"></span>
 				</label>
-				<label class="field" data-advanced data-for="ru.mkilord.colortomqttapp.core.tracker.ToleranceColorStateTracker">
+				<label class="field" data-for="ru.mkilord.colortomqttapp.core.tracker.ToleranceColorStateTracker">
 					<span class="field-label">Допуск тона</span>
 					<span class="input-wrap"><input inputmode="decimal" type="number" max="1" min="0" step="0.01" th:errorclass="invalid" th:field="*{hueTolerance}"/><span class="unit">доля</span></span>
 					<span class="field-hint">0.1 это 36°</span>
 					<span class="field-error" th:errors="*{hueTolerance}" th:if="${#fields.hasErrors('hueTolerance')}"></span>
 				</label>
-				<label class="field" data-advanced data-for="ru.mkilord.colortomqttapp.core.tracker.ToleranceColorStateTracker">
+				<label class="field" data-for="ru.mkilord.colortomqttapp.core.tracker.ToleranceColorStateTracker">
 					<span class="field-label">Допуск насыщенности</span>
 					<span class="input-wrap"><input inputmode="decimal" type="number" max="1" min="0" step="0.01" th:errorclass="invalid" th:field="*{saturationTolerance}"/><span class="unit">доля</span></span>
 					<span class="field-error" th:errors="*{saturationTolerance}" th:if="${#fields.hasErrors('saturationTolerance')}"></span>
 				</label>
-				<label class="field" data-advanced data-for="ru.mkilord.colortomqttapp.core.tracker.ToleranceColorStateTracker">
+				<label class="field" data-for="ru.mkilord.colortomqttapp.core.tracker.ToleranceColorStateTracker">
 					<span class="field-label">Допуск яркости</span>
 					<span class="input-wrap"><input inputmode="decimal" type="number" max="1" min="0" step="0.01" th:errorclass="invalid" th:field="*{brightnessTolerance}"/><span class="unit">доля</span></span>
 					<span class="field-error" th:errors="*{brightnessTolerance}" th:if="${#fields.hasErrors('brightnessTolerance')}"></span>
 				</label>
-				<label class="field" data-advanced data-for="ru.mkilord.colortomqttapp.core.tracker.DefaultColorStateTracker">
+				<label class="field" data-for="ru.mkilord.colortomqttapp.core.tracker.DefaultColorStateTracker">
 					<span class="field-label">Порог отличия</span>
 					<span class="input-wrap"><input inputmode="decimal" type="number" max="100" min="0" th:errorclass="invalid" th:field="*{sensitivity}"/><span class="unit">%</span></span>
 					<span class="field-hint">Процент от максимального расстояния в RGB.</span>
 					<span class="field-error" th:errors="*{sensitivity}" th:if="${#fields.hasErrors('sensitivity')}"></span>
 				</label>
+					</div>
+				</div>
 				</div>
 			</section>
 
@@ -434,6 +464,7 @@
 </dialog>
 
 <script id="settings-defaults" type="application/json" th:utext="${defaultsJson}">{}</script>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
 <div th:replace="~{fragments/layout :: toast}"></div>
 <script src="/js/color.js"></script>
 <script src="/js/common.js"></script>

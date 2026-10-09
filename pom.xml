@@ -11,9 +11,18 @@
 
     <groupId>ru.mkilord</groupId>
     <artifactId>ColorToMQTTApp</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
-    <name>ColorToMQTTApp</name>
-    <description>ColorToMQTTApp</description>
+    <version>1.0.0</version>
+    <name>ColorToMQTT</name>
+    <description>Захват цвета экрана и отправка в MQTT для подсветки умного дома</description>
+    <url>https://github.com/Mkilord/color-to-mqtt</url>
+
+    <developers>
+        <developer>
+            <id>mkilord</id>
+            <name>mkilord</name>
+            <url>https://github.com/Mkilord</url>
+        </developer>
+    </developers>
 
     <properties>
         <java.version>22</java.version>
@@ -76,6 +85,19 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <!-- META-INF/build-info.properties: версия и время сборки для интерфейса. -->
+                        <goals>
+                            <goal>build-info</goal>
+                        </goals>
+                        <configuration>
+                            <additionalProperties>
+                                <author>mkilord</author>
+                            </additionalProperties>
+                        </configuration>
+                    </execution>
+                </executions>
                 <configuration>
                     <!-- Те же ограничения памяти, что в start.cmd, для mvn spring-boot:run. -->
                     <jvmArguments>-Xms16m -Xmx128m -XX:+UseSerialGC -Xss512k</jvmArguments>

@@ -11,21 +11,7 @@
 <body>
 <header class="app-header" th:fragment="header(active)">
 	<a class="brand" href="/">
-		<svg aria-hidden="true" class="brand-logo" height="30" viewBox="0 0 32 32" width="30">
-			<defs>
-				<linearGradient id="brand-screen" x1="0" x2="1" y1="0" y2="1">
-					<stop offset="0" stop-color="#ff5f6d"/>
-					<stop offset="0.35" stop-color="#ffc371"/>
-					<stop offset="0.65" stop-color="#47c9a0"/>
-					<stop offset="1" stop-color="#4f7cff"/>
-				</linearGradient>
-			</defs>
-			<rect fill="url(#brand-screen)" height="14" rx="2.5" width="20" x="3" y="6"/>
-			<rect fill="none" height="14" rx="2.5" stroke="currentColor" stroke-width="1.6" width="20" x="3" y="6"/>
-			<path d="M10 24.5h6M13 20v4.5" stroke="currentColor" stroke-linecap="round" stroke-width="1.6"/>
-			<path d="M25.6 9.6a4.2 4.2 0 0 1 0 6.8M28 7.4a7.6 7.6 0 0 1 0 11.2" fill="none" stroke="currentColor"
-			      stroke-linecap="round" stroke-width="1.6"/>
-		</svg>
+		<img alt="" class="brand-logo" height="30" src="/img/logo.svg" width="30">
 		<span>ColorToMQTT</span>
 	</a>
 	<nav aria-label="Разделы" class="app-nav">
@@ -45,5 +31,10 @@
 	</button>
 </header>
 <div aria-live="polite" class="toast" id="toast" role="status" th:fragment="toast"></div>
+<footer class="app-footer" th:fragment="footer">
+	<span>ColorToMQTT <span th:text="${appVersion}">1.0.0</span></span>
+	<span>автор <a href="https://github.com/Mkilord" rel="noopener" target="_blank" th:text="${appAuthor}">mkilord</a></span>
+	<a href="https://github.com/Mkilord/color-to-mqtt" rel="noopener" target="_blank">GitHub</a>
+</footer>
 </body>
 </html>

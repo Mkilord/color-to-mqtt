@@ -37,9 +37,10 @@
         home.dataset.running = String(running);
         renderColor(status.color);
 
-        setState(el('capture-state'), running ? 'Идет' : 'Остановлен', running ? 'ok' : 'idle');
+        setState(el('capture-state'), running ? 'Выполняется' : 'Остановлен', running ? 'ok' : 'idle');
         el('broker').textContent = status.broker || 'не задан';
-        el('topic').textContent = status.topic || 'не задан';
+        el('broker').title = status.broker || '';
+        el('topic-text').textContent = status.topic || 'не задан';
 
         const mqtt = el('mqtt-state');
         if (status.connected === null) {
@@ -49,15 +50,18 @@
         }
 
         const perf = status.performance;
-        el('performance-row').hidden = !perf;
         if (perf) {
             el('performance-fps').textContent = perf.idle
                 ? `${perf.fps} кадров/с, экран не меняется`
                 : `${perf.fps} кадров/с`;
             el('performance-detail').textContent = `снимок ${perf.captureMs} мс, расчет ${perf.processMs} мс`;
+        } else {
+            el('performance-fps').textContent = '—';
+            el('performance-detail').textContent = 'появится после запуска';
         }
 
         el('last-payload').textContent = status.lastPayload || 'Еще не отправлялось';
+        el('last-payload').title = status.lastPayload || '';
         el('last-sent').textContent = status.lastSentAt ? `в ${formatTime(status.lastSentAt)}` : '';
 
         const banner = el('error-banner');

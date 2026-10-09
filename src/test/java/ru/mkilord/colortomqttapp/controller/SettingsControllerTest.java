@@ -78,7 +78,8 @@ class SettingsControllerTest {
                 .andExpect(content().string(containsString("tcp://localhost:1883")))
                 .andExpect(content().string(containsString("По допускам H, S, B")))
                 .andExpect(content().string(containsString(GAMES)))
-                .andExpect(content().string(containsString("settings-defaults")));
+                .andExpect(content().string(containsString("settings-defaults")))
+                .andExpect(content().string(containsString("mkilord")));
     }
 
     @Test

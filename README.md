@@ -1,4 +1,4 @@
-# ColorToMQTTApp
+# ColorToMQTT
 
 [![CI](https://github.com/Mkilord/color-to-mqtt/actions/workflows/ci.yml/badge.svg)](https://github.com/Mkilord/color-to-mqtt/actions/workflows/ci.yml)
 
@@ -163,3 +163,11 @@ mvn verify
 ```
 
 Unit-тесты покрывают обработку кадра, расчет цвета, трекеры, сдвиг и ограничения, черные и серые кадры, формат сообщения MQTT, профили настроек и перенос старого settings.txt, страницу настроек с сохранением через JSON, API профилей и статуса. GitHub Actions запускает сборку и тесты на каждый push.
+
+## Версии
+
+Номер версии задается в `pom.xml` и выводится в подвале интерфейса. Изменения по версиям описаны в [CHANGELOG.md](CHANGELOG.md).
+
+## Автор
+
+[mkilord](https://github.com/Mkilord)

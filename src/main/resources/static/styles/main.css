@@ -116,6 +116,11 @@ h1, h2, h3 {
     padding: 14px 24px;
 }
 
+.brand-logo {
+    display: block;
+    border-radius: 7px;
+}
+
 .brand {
     display: inline-flex;
     align-items: center;
@@ -449,6 +454,7 @@ h1, h2, h3 {
 .status-panel {
     grid-area: status;
     align-self: start;
+    min-width: 0;
     display: flex;
     flex-direction: column;
     gap: 16px;
@@ -474,13 +480,39 @@ h1, h2, h3 {
     font-size: 13px;
 }
 
+/* Строки статуса однострочные: длинный текст обрезается, панель не меняет высоту. */
+.status-list div {
+    min-width: 0;
+}
+
 .status-list dd {
     display: flex;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     align-items: baseline;
-    gap: 4px 10px;
+    gap: 2px 10px;
+    min-width: 0;
+    min-height: 26px;
     margin: 0;
-    overflow-wrap: anywhere;
+}
+
+.status-list dd > * {
+    flex: none;
+}
+
+.status-list dd > .ellipsis {
+    flex: 0 1 auto;
+    min-width: 0;
+}
+
+.status-list dd.stack {
+    flex-direction: column;
+    align-items: stretch;
+}
+
+.ellipsis {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
 }
 
 .payload {
@@ -1313,9 +1345,6 @@ h1, h2, h3 {
     vertical-align: middle;
 }
 
-.settings:not(.show-advanced) .field.changed .field-label::after {
-    display: none;
-}
 
 .capture-layout {
     display: grid;
@@ -1559,4 +1588,106 @@ h1, h2, h3 {
 
 .profile-bar .state {
     margin-bottom: 8px;
+}
+
+/* ---------- Настройки: карточка профиля и расширенный блок ---------- */
+
+.settings-main > .page-title {
+    margin: 8px 0 16px;
+}
+
+.profile-card {
+    display: grid;
+    gap: 10px;
+    margin-bottom: 16px;
+    padding: 16px 20px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-l);
+    background: var(--surface);
+}
+
+.profile-card-main {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 12px 16px;
+}
+
+.profile-card .profile-select {
+    flex: 1 1 220px;
+    max-width: 320px;
+}
+
+.profile-card .profile-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+.profile-usage {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 8px;
+    margin: 0;
+    color: var(--muted);
+    font-size: 13px;
+}
+
+.tag {
+    padding: 1px 8px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: var(--surface-2);
+    color: var(--ink);
+    font-size: 12px;
+}
+
+.button.ghost.danger-text:hover {
+    color: var(--error);
+}
+
+.advanced-group {
+    display: grid;
+    gap: 8px;
+}
+
+.advanced-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px 16px;
+}
+
+.advanced-title {
+    font-size: 17px;
+    font-weight: 600;
+}
+
+.advanced-intro {
+    margin: 0;
+}
+
+.advanced-body > .subgroup:first-child {
+    margin-top: 8px;
+}
+
+/* ---------- Подвал ---------- */
+
+.app-footer {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 4px 18px;
+    max-width: 1180px;
+    margin: 8px auto 0;
+    padding: 16px 24px 24px;
+    color: var(--muted);
+    font-size: 12px;
+}
+
+.app-footer a {
+    color: inherit;
 }
