@@ -51,7 +51,7 @@ public class YamlSettingsStore implements SettingsStore {
 
     @Autowired
     public YamlSettingsStore(AppProperties properties) {
-        this(properties.storageDir(), properties.mqtt());
+        this(properties.storagePath(), properties.mqtt());
     }
 
     YamlSettingsStore(Path root, MqttConnection defaultConnection) {

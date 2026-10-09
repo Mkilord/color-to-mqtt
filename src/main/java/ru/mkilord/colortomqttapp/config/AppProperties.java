@@ -10,9 +10,14 @@ import java.nio.file.Path;
  * @param mqtt       подключение по умолчанию, пока в интерфейсе ничего не сохранено
  */
 @ConfigurationProperties("app")
-public record AppProperties(Path storageDir, MqttConnection mqtt) {
+public record AppProperties(String storageDir, MqttConnection mqtt) {
 
-    public AppProperties {
-        storageDir = (storageDir == null ? Path.of(".") : storageDir).toAbsolutePath().normalize();
+    /**
+     * Путь строится здесь, а не конвертером Spring: тот разрешает относительный путь
+     * через загрузчик ресурсов веб-приложения, и "." уходит во временную папку Tomcat.
+     */
+    public Path storagePath() {
+        var dir = storageDir == null || storageDir.isBlank() ? "." : storageDir.strip();
+        return Path.of(dir).toAbsolutePath().normalize();
     }
 }
