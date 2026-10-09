@@ -240,7 +240,7 @@
 					<span class="field-hint" id="detector-help"></span>
 					<span class="field-error" th:errors="*{detector}" th:if="${#fields.hasErrors('detector')}"></span>
 				</label>
-				<label class="field" data-for-detector="ru.mkilord.colortomqttapp.core.detector.DominantColorDetector">
+				<label class="field" data-for-detector="DOMINANT">
 					<span class="field-label">Минимальная доля цвета</span>
 					<span class="input-wrap"><input inputmode="decimal" type="number" max="100" min="0" step="1" data-live th:errorclass="invalid" th:field="*{dominantMinShare}"/><span class="unit">%</span></span>
 					<span class="field-hint">Если цветных точек меньше, берется простое среднее.</span>
@@ -322,23 +322,23 @@
 					<span class="field-hint" id="tracker-help"></span>
 					<span class="field-error" th:errors="*{stateTracker}" th:if="${#fields.hasErrors('stateTracker')}"></span>
 				</label>
-				<label class="field" data-for="ru.mkilord.colortomqttapp.core.tracker.ToleranceColorStateTracker">
+				<label class="field" data-for="HSB_TOLERANCE">
 					<span class="field-label">Допуск тона</span>
 					<span class="input-wrap"><input inputmode="decimal" type="number" max="1" min="0" step="0.01" th:errorclass="invalid" th:field="*{hueTolerance}"/><span class="unit">доля</span></span>
 					<span class="field-hint">0.1 это 36°</span>
 					<span class="field-error" th:errors="*{hueTolerance}" th:if="${#fields.hasErrors('hueTolerance')}"></span>
 				</label>
-				<label class="field" data-for="ru.mkilord.colortomqttapp.core.tracker.ToleranceColorStateTracker">
+				<label class="field" data-for="HSB_TOLERANCE">
 					<span class="field-label">Допуск насыщенности</span>
 					<span class="input-wrap"><input inputmode="decimal" type="number" max="1" min="0" step="0.01" th:errorclass="invalid" th:field="*{saturationTolerance}"/><span class="unit">доля</span></span>
 					<span class="field-error" th:errors="*{saturationTolerance}" th:if="${#fields.hasErrors('saturationTolerance')}"></span>
 				</label>
-				<label class="field" data-for="ru.mkilord.colortomqttapp.core.tracker.ToleranceColorStateTracker">
+				<label class="field" data-for="HSB_TOLERANCE">
 					<span class="field-label">Допуск яркости</span>
 					<span class="input-wrap"><input inputmode="decimal" type="number" max="1" min="0" step="0.01" th:errorclass="invalid" th:field="*{brightnessTolerance}"/><span class="unit">доля</span></span>
 					<span class="field-error" th:errors="*{brightnessTolerance}" th:if="${#fields.hasErrors('brightnessTolerance')}"></span>
 				</label>
-				<label class="field" data-for="ru.mkilord.colortomqttapp.core.tracker.DefaultColorStateTracker">
+				<label class="field" data-for="RGB_DISTANCE">
 					<span class="field-label">Порог отличия</span>
 					<span class="input-wrap"><input inputmode="decimal" type="number" max="100" min="0" th:errorclass="invalid" th:field="*{sensitivity}"/><span class="unit">%</span></span>
 					<span class="field-hint">Процент от максимального расстояния в RGB.</span>

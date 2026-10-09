@@ -102,12 +102,11 @@ const ColorMath = (() => {
     }
 
     // ---- Расчет цвета кадра, как детекторы на сервере. Точки: [{r, g, b}] ----
-    const pkg = 'ru.mkilord.colortomqttapp.core.';
-    const DOMINANT = pkg + 'detector.DominantColorDetector';
-    const VIVID = pkg + 'detector.VividColorDetector';
-    const GRID = pkg + 'processor.GridProcessor';
+    const DOMINANT = 'DOMINANT';
+    const VIVID = 'VIVID';
+    const GRID = 'GRID';
 
-    // Точки обхода, как ChessProcessor и GridProcessor.
+    // Точки обхода, как PointSampler.chess и PointSampler.grid.
     function samplePoints(processor, width, height, cell) {
         const points = [];
         for (let y = 0; y < height; y += cell) {

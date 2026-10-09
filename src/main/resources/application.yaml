@@ -1,6 +1,6 @@
 spring:
   application:
-    name: ColorToMQTTApp
+    name: ColorToMQTT
   web:
     resources:
       static-locations: classpath:/static/
@@ -11,49 +11,11 @@ server:
       max: 8
       min-spare: 1
 app:
-  defaultSettings:
-    screenHeight: 400
-    screenWight: 400
-    updatePeriod: 10 #ms
-    idlePeriod: 100 #ms, пауза между кадрами, если экран не меняется 3 с; 0 отключает
-    holdTime: 150 #ms, сколько цвет должен продержаться перед отправкой
-    processor: ru.mkilord.colortomqttapp.core.processor.ChessProcessor
-    detector: ru.mkilord.colortomqttapp.core.detector.DominantColorDetector
-    dominantMinShare: 5 #%, меньше - цвета на экране нет, берется среднее
-    screenAreaType: ru.mkilord.colortomqttapp.core.screenshoter.screenArea.DefaultScreenArea
-    stateTracker: ru.mkilord.colortomqttapp.core.tracker.ToleranceColorStateTracker
-    sensitivity: 30 #min 0 max 100
-    hueTolerance: 0.2
-    saturationTolerance: 0.15
-    brightnessTolerance: 0.06
-
-    modifyHue: 0
-    modifySaturation: 0
-    modifyBrightness: 0
-    saturationBoost: 30 #%, приближает насыщенность к 100
-    # Поправка тона для опорных цветов, градусы; между ними плавно
-    hueShiftRed: 0
-    hueShiftYellow: 0
-    hueShiftGreen: 0
-    hueShiftCyan: 0
-    hueShiftBlue: 0
-    hueShiftMagenta: 0
-
-    blackThreshold: 5 #%, ниже отправляется яркость 0
-    grayThreshold: 12 #%, ниже отправляется насыщенность 0
-
-    cellSize: 20
-
-    #MQTT
+  # Папка с settings.yaml и profiles. Значения профилей по умолчанию заданы в коде (ProfileSettings.DEFAULTS).
+  storage-dir: .
+  # Подключение до первого сохранения в интерфейсе.
+  mqtt:
     broker: ${MQTT_BROKER:tcp://localhost:1883}
     topic: ${MQTT_TOPIC:colorToMQTT}
     username: ${MQTT_USERNAME:}
     password: ${MQTT_PASSWORD:}
-
-    minHUE: 0
-    maxHUE: 360
-    minSaturation: 0
-    maxSaturation: 100
-    minBrightness: 0
-    maxBrightness: 100
-

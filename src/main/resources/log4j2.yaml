@@ -19,13 +19,6 @@ Configuration:
         SizeBasedTriggeringPolicy:
           size: 5MB
   loggers:
-    logger:
-      - name: ru.mkilord.colortomqttapp.core.tracker
-        level: INFO
-        additivity: false
-        AppenderRef:
-          - ref: Console
-          - ref: RollingFile
     Root:
       level: INFO
       AppenderRef:

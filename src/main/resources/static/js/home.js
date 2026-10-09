@@ -102,9 +102,9 @@
         busy = true;
         button.disabled = true;
         try {
-            const response = await fetch(running ? '/stop' : '/start', {method: 'POST'});
-            const message = await response.text();
-            showToast(message, response.ok ? 'success' : 'error');
+            const response = await fetch(running ? '/api/capture/stop' : '/api/capture/start', {method: 'POST'});
+            const data = await response.json().catch(() => ({}));
+            showToast(data.message || data.error || 'HTTP ' + response.status, response.ok ? 'success' : 'error');
         } catch (e) {
             showToast('Нет связи с приложением', 'error');
         } finally {

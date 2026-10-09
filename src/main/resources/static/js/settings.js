@@ -115,19 +115,19 @@
 
     // ---- Подсказки к способам расчета и сравнения ----
     const TRACKER_HELP = {
-        'ru.mkilord.colortomqttapp.core.tracker.ToleranceColorStateTracker':
+        HSB_TOLERANCE:
             'Цвет отправляется, если тон, насыщенность или яркость изменились больше допуска.',
-        'ru.mkilord.colortomqttapp.core.tracker.DefaultColorStateTracker':
+        RGB_DISTANCE:
             'Цвет отправляется, если расстояние между цветами в RGB больше порога.',
-        'ru.mkilord.colortomqttapp.core.tracker.SimpleColorStateTracker':
+        ANY_CHANGE:
             'Цвет отправляется при любом изменении. Сообщений будет много, сглаживание вспышек почти не сработает.'
     };
     const DETECTOR_HELP = {
-        'ru.mkilord.colortomqttapp.core.detector.DominantColorDetector':
+        DOMINANT:
             'Цвет, которого больше всего среди цветных точек. Темный фон и серое не учитываются: красный объект на темном фоне даст красный.',
-        'ru.mkilord.colortomqttapp.core.detector.VividColorDetector':
+        VIVID:
             'Среднее, где яркие насыщенные точки весят больше темных и серых. Несколько цветов смешиваются.',
-        'ru.mkilord.colortomqttapp.core.detector.AverageColorDetector':
+        AVERAGE:
             'Среднее по всем точкам. Темный фон и серое делают цвет бледнее.'
     };
     const tracker = el('tracker');
@@ -410,7 +410,7 @@
                 width: Math.max(1, Math.round(num('screenWidth'))),
                 height: Math.max(1, Math.round(num('screenHeight')))
             });
-            const response = await fetch('/settings/preview_image?' + params, {cache: 'no-store'});
+            const response = await fetch('/api/snapshot?' + params, {cache: 'no-store'});
             if (!response.ok) {
                 throw new Error('HTTP ' + response.status);
             }
