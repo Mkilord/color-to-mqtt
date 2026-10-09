@@ -177,8 +177,9 @@ class SettingsControllerTest {
     @Test
     void defaultsJsonHasNoCredentials() throws Exception {
         mvc.perform(get("/settings"))
-                .andExpect(content().string(containsString("\"saturationBoost\"")))
-                .andExpect(content().string(not(containsString("\"passwordSet\""))));
+                .andExpect(content().string(containsString("\"saturationBoost\":")))
+                .andExpect(content().string(not(containsString("\"passwordSet\":"))))
+                .andExpect(content().string(not(containsString("\"username\":"))));
     }
 
     /**
