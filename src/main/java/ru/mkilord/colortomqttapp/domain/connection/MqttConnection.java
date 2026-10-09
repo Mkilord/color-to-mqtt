@@ -40,4 +40,11 @@ public record MqttConnection(String broker, String topic, String username, Strin
         var keepPassword = edited.password.isEmpty() && edited.hasCredentials();
         return new MqttConnection(edited.broker, edited.topic, edited.username, keepPassword ? password : edited.password);
     }
+
+    /** Пароль не попадает в логи. */
+    @Override
+    public String toString() {
+        return "MqttConnection[broker=" + broker + ", topic=" + topic + ", username=" + username
+                + ", password=" + (password.isEmpty() ? "" : "***") + "]";
+    }
 }

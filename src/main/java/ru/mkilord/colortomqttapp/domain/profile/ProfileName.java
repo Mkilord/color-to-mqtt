@@ -11,12 +11,12 @@ import java.util.regex.Pattern;
  */
 public record ProfileName(String value) {
 
-    public static final ProfileName DEFAULT = new ProfileName("Основной");
-
     private static final Pattern NAME = Pattern.compile("[\\p{L}\\p{N}][\\p{L}\\p{N} _\\-]{0,39}");
     private static final Set<String> RESERVED = Set.of("con", "prn", "aux", "nul",
             "com1", "com2", "com3", "com4", "com5", "com6", "com7", "com8", "com9",
             "lpt1", "lpt2", "lpt3", "lpt4", "lpt5", "lpt6", "lpt7", "lpt8", "lpt9");
+
+    public static final ProfileName DEFAULT = new ProfileName("Основной");
 
     public ProfileName {
         value = value == null ? "" : value.strip();

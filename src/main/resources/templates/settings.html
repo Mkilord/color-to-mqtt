@@ -70,7 +70,7 @@
 						       th:placeholder="${form.passwordSet} ? 'Сохранен' : 'Не задан'" type="password"/>
 						<button aria-controls="password" aria-pressed="false" class="input-action" id="password-toggle" type="button">Показать</button>
 					</span>
-					<span class="field-hint">Хранится в settings.txt на этом компьютере. Пустое поле оставляет сохраненный пароль.</span>
+					<span class="field-hint">Хранится в settings.yaml на этом компьютере. Пустое поле оставляет сохраненный пароль.</span>
 					<span class="field-error" th:errors="*{password}" th:if="${#fields.hasErrors('password')}"></span>
 				</label>
 				<input th:field="*{passwordSet}" type="hidden"/>
