@@ -34,11 +34,9 @@ build/
 .vscode/
 /src/main/frontend/
 
-### App ###
-logs/
-settings.txt
-
 ### ColorToMQTT ###
+settings.yaml
 settings.txt
+settings.txt.bak
 profiles/
 logs/
