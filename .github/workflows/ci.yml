@@ -23,8 +23,9 @@ jobs:
         if: failure()
         run: |
           # GitHub показывает не больше 10 аннотаций-ошибок на шаг, поэтому сначала самое полезное.
-          grep -h -o -E 'Caused by: [^&]{0,400}' target/surefire-reports/*.xml 2>/dev/null | sort -u | tail -4 | sed 's/^/::error::/' || true
-          grep -h -E '<<< (FAILURE|ERROR)' target/surefire-reports/*.txt 2>/dev/null | cut -c1-300 | head -3 | sed 's/^/::error::/' || true
+          grep -h -o -E 'Caused by: [^&]{0,400}' target/surefire-reports/*.xml 2>/dev/null | sort -u | tail -2 | sed 's/^/::error::/' || true
+          # Упавший тест вместе с первой строкой исключения.
+          awk '/<<< (FAILURE|ERROR)/ && !/Tests run/ {name=$1; getline; print name " " $0}' target/surefire-reports/*.txt 2>/dev/null | cut -c1-400 | head -5 | sed 's/^/::error::/' || true
           grep -E '^\[ERROR\] .*\.java' build.log | head -3 | sed -E 's/^\[ERROR\] ?/::error::/' || true
 
       - name: Test reports

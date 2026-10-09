@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ru.mkilord.colortomqttapp.application.SettingsStore;
 import ru.mkilord.colortomqttapp.config.AppProperties;
@@ -48,6 +49,7 @@ public class YamlSettingsStore implements SettingsStore {
     private final MqttConnection defaultConnection;
     private final ObjectMapper yaml;
 
+    @Autowired
     public YamlSettingsStore(AppProperties properties) {
         this(properties.storageDir(), properties.mqtt());
     }
