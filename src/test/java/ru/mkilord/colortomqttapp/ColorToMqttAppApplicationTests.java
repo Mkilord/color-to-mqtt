@@ -20,6 +20,5 @@ class ColorToMqttAppApplicationTests {
     void storageIsRelativeToWorkingDirectory() {
         assertThat(properties.storagePath())
                 .isEqualTo(Path.of("target/test-storage").toAbsolutePath().normalize());
-        assertThat(properties.storagePath().resolve("settings.yaml")).exists();
     }
 }

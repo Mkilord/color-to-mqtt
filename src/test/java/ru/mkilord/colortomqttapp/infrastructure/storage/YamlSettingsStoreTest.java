@@ -6,9 +6,8 @@ import ru.mkilord.colortomqttapp.domain.connection.MqttConnection;
 import ru.mkilord.colortomqttapp.domain.profile.ProfileName;
 import ru.mkilord.colortomqttapp.domain.settings.CaptureSettings;
 import ru.mkilord.colortomqttapp.domain.settings.ComparisonMethod;
-import ru.mkilord.colortomqttapp.domain.settings.DetectionMethod;
 import ru.mkilord.colortomqttapp.domain.settings.ProfileSettings;
-import ru.mkilord.colortomqttapp.domain.settings.SamplingPattern;
+import ru.mkilord.colortomqttapp.domain.settings.SendingSettings;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -31,13 +30,40 @@ class YamlSettingsStoreTest {
     }
 
     @Test
-    void emptyFolderGetsDefaultProfile() {
+    void emptyFolderHasNoProfilesAndDefaultConnection() {
         var store = store();
 
-        assertThat(store.profileNames()).containsExactly(ProfileName.DEFAULT);
-        assertThat(store.loadActiveProfile()).contains(ProfileName.DEFAULT);
-        assertThat(store.loadProfile(ProfileName.DEFAULT)).contains(ProfileSettings.DEFAULTS);
+        assertThat(store.profileNames()).isEmpty();
+        assertThat(store.loadActiveProfile()).isEmpty();
         assertThat(store.loadConnection()).isEqualTo(DEFAULT_CONNECTION);
+    }
+
+    @Test
+    void defaultProfileIsStoredAsEmptyFile() throws IOException {
+        store().saveProfile(ProfileName.DEFAULT, ProfileSettings.DEFAULTS);
+
+        assertThat(Files.readString(root.resolve("profiles/Основной.yaml")).strip()).isIn("{}", "");
+        assertThat(store().loadProfile(ProfileName.DEFAULT)).contains(ProfileSettings.DEFAULTS);
+    }
+
+    @Test
+    void partialNestedValuesKeepOtherDefaults() throws IOException {
+        Files.createDirectories(root.resolve("profiles"));
+        Files.writeString(root.resolve("profiles/Игры.yaml"), """
+                correction:
+                  ranges:
+                    brightness:
+                      max: 50
+                sending:
+                  comparison: RGB_DISTANCE
+                """);
+
+        var games = store().loadProfile(GAMES).orElseThrow();
+
+        assertThat(games.correction().ranges().brightness().max()).isEqualTo(50);
+        assertThat(games.correction().ranges().brightness().min()).isEqualTo(0);
+        assertThat(games.sending().comparison()).isEqualTo(ComparisonMethod.RGB_DISTANCE);
+        assertThat(games.sending().holdTimeMs()).isEqualTo(SendingSettings.DEFAULTS.holdTimeMs());
     }
 
     @Test
@@ -57,6 +83,7 @@ class YamlSettingsStoreTest {
     @Test
     void renameAndDeleteMoveFiles() {
         var store = store();
+        store.saveProfile(ProfileName.DEFAULT, ProfileSettings.DEFAULTS);
         store.saveProfile(GAMES, ProfileSettings.DEFAULTS);
 
         store.renameProfile(GAMES, ProfileName.of("Кино"));
@@ -79,68 +106,11 @@ class YamlSettingsStoreTest {
     @Test
     void corruptedProfileIsReported() throws IOException {
         var store = store();
+        Files.createDirectories(root.resolve("profiles"));
         Files.writeString(root.resolve("profiles/Игры.yaml"), "capture:\n  width: -5\n");
 
         assertThatThrownBy(() -> store.loadProfile(GAMES))
                 .isInstanceOf(StorageException.class)
                 .hasMessageContaining("Игры");
-    }
-
-    @Test
-    void legacySettingsAreImported() throws IOException {
-        Files.writeString(root.resolve("settings.txt"), """
-                broker=tcp://192.168.1.5:1883
-                topic=lamps/color
-                username=ha
-                password=pass
-                activeProfile=Кино
-                """);
-        Files.createDirectories(root.resolve("profiles"));
-        Files.writeString(root.resolve("profiles/Кино.properties"), """
-                screenWight=640
-                screenHeight=360
-                processor=ru.mkilord.colortomqttapp.core.processor.GridProcessor
-                detector=ru.mkilord.colortomqttapp.core.detector.VividColorDetector
-                stateTracker=ru.mkilord.colortomqttapp.core.tracker.DefaultColorStateTracker
-                sensitivity=25
-                minHUE=10
-                maxHUE=300
-                hueShiftGreen=-15
-                holdTime=200
-                """);
-        Files.writeString(root.resolve("profiles/Игры.properties"), "screenWight=999999\nholdTime=50\n");
-
-        var store = store();
-
-        assertThat(store.loadConnection()).isEqualTo(new MqttConnection("tcp://192.168.1.5:1883", "lamps/color", "ha", "pass"));
-        assertThat(store.loadActiveProfile()).contains(ProfileName.of("Кино"));
-
-        var movie = store.loadProfile(ProfileName.of("Кино")).orElseThrow();
-        assertThat(movie.capture().width()).isEqualTo(640);
-        assertThat(movie.capture().sampling()).isEqualTo(SamplingPattern.GRID);
-        assertThat(movie.detection().method()).isEqualTo(DetectionMethod.VIVID);
-        assertThat(movie.sending().comparison()).isEqualTo(ComparisonMethod.RGB_DISTANCE);
-        assertThat(movie.sending().rgbThresholdPercent()).isEqualTo(25);
-        assertThat(movie.sending().holdTimeMs()).isEqualTo(200);
-        assertThat(movie.correction().ranges().hue().min()).isEqualTo(10);
-        assertThat(movie.correction().hueShifts().green()).isEqualTo(-15);
-
-        var games = store.loadProfile(GAMES).orElseThrow();
-        assertThat(games.capture()).isEqualTo(CaptureSettings.DEFAULTS);
-        assertThat(games.sending().holdTimeMs()).isEqualTo(50);
-
-        assertThat(root.resolve("settings.txt.bak")).exists();
-        assertThat(root.resolve("profiles/Кино.properties.bak")).exists();
-        assertThat(root.resolve("settings.txt")).doesNotExist();
-    }
-
-    @Test
-    void legacyGlobalSettingsBecomeDefaultProfile() throws IOException {
-        Files.writeString(root.resolve("settings.txt"), "screenWight=500\nbroker=tcp://h:1883\ntopic=t\n");
-
-        var store = store();
-
-        assertThat(store.profileNames()).containsExactly(ProfileName.DEFAULT);
-        assertThat(store.loadProfile(ProfileName.DEFAULT).orElseThrow().capture().width()).isEqualTo(500);
     }
 }

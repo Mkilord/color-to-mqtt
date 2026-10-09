@@ -36,7 +36,5 @@ build/
 
 ### ColorToMQTT ###
 settings.yaml
-settings.txt
-settings.txt.bak
 profiles/
 logs/

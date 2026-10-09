@@ -33,15 +33,15 @@ import java.util.Optional;
  *     <li>{@code profiles/<имя>.yaml}: только отличия профиля от значений по умолчанию.</li>
  * </ul>
  * Благодаря хранению отличий новые значения по умолчанию из следующих версий доходят
- * до старых профилей сами. Старые {@code .properties} переносит {@link LegacySettingsImporter}.
+ * до старых профилей сами.
  */
 @Slf4j
 @Component
 public class YamlSettingsStore implements SettingsStore {
 
-    static final String SETTINGS_FILE = "settings.yaml";
-    static final String PROFILES_DIR = "profiles";
-    static final String EXTENSION = ".yaml";
+    private static final String SETTINGS_FILE = "settings.yaml";
+    private static final String PROFILES_DIR = "profiles";
+    private static final String EXTENSION = ".yaml";
     private static final Comparator<ProfileName> BY_NAME =
             Comparator.comparing(ProfileName::value, Collator.getInstance(Locale.forLanguageTag("ru")));
 
@@ -61,11 +61,6 @@ public class YamlSettingsStore implements SettingsStore {
                 .disable(YAMLGenerator.Feature.WRITE_DOC_START_MARKER)
                 .enable(YAMLGenerator.Feature.MINIMIZE_QUOTES))
                 .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
-        new LegacySettingsImporter(root, this).importIfNeeded();
-    }
-
-    boolean exists() {
-        return Files.exists(settingsFile());
     }
 
     @Override
