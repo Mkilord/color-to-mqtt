@@ -1,7 +1,8 @@
 @echo off
 chcp 65001 >nul
 rem Запуск ColorToMQTT одним процессом и с ограничением памяти.
-rem Собирает jar, если его нет. "start.cmd build" пересобирает после обновления кода (нужен Maven).
+rem Собирает jar, если его нет. "start.cmd build" пересобирает после обновления кода.
+rem Maven ставить не нужно: mvnw.cmd при первом запуске сам скачает его в %USERPROFILE%\.m2.
 cd /d "%~dp0"
 
 set JAR=target\color-to-mqtt.jar
@@ -11,7 +12,7 @@ goto run
 
 :build
 echo Сборка %JAR%...
-call mvn -q -DskipTests package || exit /b 1
+call mvnw.cmd -q -DskipTests package || exit /b 1
 
 :run
 java -Xms16m -Xmx128m -XX:+UseSerialGC -Xss512k -jar "%JAR%"

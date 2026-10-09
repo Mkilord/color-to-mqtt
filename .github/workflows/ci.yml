@@ -17,7 +17,7 @@ jobs:
           cache: maven
 
       - name: Build and test
-        run: mvn -B -ntp verify -DtrimStackTrace=false 2>&1 | tee build.log; exit ${PIPESTATUS[0]}
+        run: ./mvnw -B -ntp verify -DtrimStackTrace=false 2>&1 | tee build.log; exit ${PIPESTATUS[0]}
 
       - name: Report errors
         if: failure()
