@@ -29,6 +29,15 @@
 
 	<section aria-labelledby="status-title" class="panel status-panel">
 		<h1 class="panel-title" id="status-title">Захват цвета</h1>
+		<div class="profile-switch" role="group" aria-labelledby="profile-switch-title">
+			<div class="profile-switch-head">
+				<span class="profile-switch-title" id="profile-switch-title">Профиль</span>
+				<a class="small" id="profile-edit" th:href="@{/settings(profile=${activeProfile})}">Настроить</a>
+			</div>
+			<div class="profile-chips" id="profile-chips">
+				<button class="profile-chip" th:each="p : ${profiles}" th:text="${p}" th:attr="data-profile=${p},aria-pressed=${p == activeProfile}" type="button">Профиль</button>
+			</div>
+		</div>
 		<dl class="status-list">
 			<div>
 				<dt>Состояние</dt>

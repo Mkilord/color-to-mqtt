@@ -528,7 +528,7 @@ h1, h2, h3 {
 
 .settings {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 340px;
+    grid-template-columns: minmax(0, 1fr) 380px;
     gap: 24px;
     max-width: 1180px;
     margin: 0 auto;
@@ -852,7 +852,9 @@ h1, h2, h3 {
     display: flex;
     flex-direction: column;
     gap: 14px;
-    margin-top: 58px;
+    max-height: calc(100vh - 32px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
 }
 
 .inspector-panel .panel-title {
@@ -1126,4 +1128,435 @@ h1, h2, h3 {
 
 #send-test {
     margin-left: auto;
+}
+
+/* ---------- Профили ---------- */
+
+.profile-switch {
+    display: grid;
+    gap: 8px;
+}
+
+.profile-switch-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+}
+
+.profile-switch-title {
+    color: var(--muted);
+    font-size: 13px;
+}
+
+.profile-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.profile-chip {
+    padding: 6px 12px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: var(--surface);
+    color: var(--ink);
+    font: inherit;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.profile-chip:hover {
+    border-color: var(--muted);
+}
+
+.profile-chip[aria-pressed="true"] {
+    border-color: var(--primary-bg);
+    background: var(--primary-bg);
+    color: var(--primary-ink);
+    cursor: default;
+}
+
+.profile-chip:focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: 2px;
+}
+
+/* ---------- Настройки: профиль, режим, разделы ---------- */
+
+.settings-top {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 12px 20px;
+    margin-bottom: 16px;
+}
+
+.settings-top .page-title {
+    margin: 0 auto 0 0;
+}
+
+.profile-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 8px;
+}
+
+.profile-select {
+    display: grid;
+    gap: 4px;
+    min-width: 180px;
+}
+
+.profile-bar .state {
+    align-self: center;
+}
+
+.profile-actions {
+    display: flex;
+    gap: 6px;
+}
+
+.switch {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    user-select: none;
+}
+
+.switch input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.switch-track {
+    position: relative;
+    flex: none;
+    width: 36px;
+    height: 20px;
+    border-radius: 999px;
+    background: var(--line);
+    transition: background-color 0.15s;
+}
+
+.switch-track::after {
+    content: "";
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--surface);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+    transition: transform 0.15s;
+}
+
+.switch input:checked + .switch-track {
+    background: var(--primary-bg);
+}
+
+.switch input:checked + .switch-track::after {
+    transform: translateX(16px);
+}
+
+.switch input:focus-visible + .switch-track {
+    outline: 2px solid var(--focus);
+    outline-offset: 2px;
+}
+
+.advanced-state {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.link-button {
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--focus);
+    font: inherit;
+    font-size: 13px;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    cursor: pointer;
+}
+
+/* Расширенный режим: без него такие поля скрыты, но значения уходят с формой. */
+.settings:not(.show-advanced) [data-advanced] {
+    display: none !important;
+}
+
+.group-note {
+    margin-left: 10px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: var(--surface-2);
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 400;
+    vertical-align: middle;
+}
+
+/* Поле отличается от значения по умолчанию */
+.field.changed .field-label::after {
+    content: "";
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    margin-left: 6px;
+    border-radius: 50%;
+    background: var(--focus);
+    vertical-align: middle;
+}
+
+.settings:not(.show-advanced) .field.changed .field-label::after {
+    display: none;
+}
+
+.capture-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 200px;
+    gap: 20px;
+    align-items: start;
+}
+
+.capture-layout .screen-map {
+    margin: 0;
+}
+
+.subgroup {
+    display: grid;
+    gap: 12px;
+    margin-top: 18px;
+    padding-top: 16px;
+    border-top: 1px solid var(--line);
+}
+
+.subgroup-head h3 {
+    margin: 0 0 4px;
+    font-size: 15px;
+}
+
+.subgroup-head p {
+    margin: 0;
+}
+
+/* ---------- Проверка ---------- */
+
+.snapshot {
+    margin: 0;
+}
+
+.snapshot-frame {
+    min-height: 150px;
+}
+
+.snapshot-bar {
+    gap: 6px 12px;
+}
+
+.snapshot-result {
+    margin: 6px 0 0;
+}
+
+.picker {
+    display: grid;
+    gap: 8px;
+}
+
+.picker-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+}
+
+.picker-main {
+    display: grid;
+    grid-template-columns: 40px 92px minmax(0, 1fr);
+    align-items: center;
+    gap: 10px;
+}
+
+.picker-swatch {
+    width: 40px;
+    height: 40px;
+    border-radius: var(--radius-m);
+    box-shadow: inset 0 0 0 1px rgba(127, 127, 127, 0.4);
+}
+
+.picker-hex {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-s);
+    background: var(--surface-2);
+    color: var(--ink);
+    font-size: 14px;
+}
+
+.picker-hex.invalid {
+    border-color: var(--error);
+}
+
+.sample-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+}
+
+.sample-chips .chip-button {
+    width: 22px;
+    height: 22px;
+}
+
+.slider {
+    display: grid;
+    grid-template-columns: 64px minmax(0, 1fr) 42px;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--muted);
+}
+
+.slider output {
+    color: var(--ink);
+    font-family: var(--mono);
+    font-size: 12px;
+    text-align: right;
+}
+
+.slider input[type="range"] {
+    width: 100%;
+    height: 22px;
+    margin: 0;
+    background: transparent;
+    appearance: none;
+    -webkit-appearance: none;
+    cursor: pointer;
+}
+
+.slider input[type="range"]::-webkit-slider-runnable-track {
+    height: 10px;
+    border-radius: 999px;
+    background: var(--track, var(--line));
+    box-shadow: inset 0 0 0 1px rgba(127, 127, 127, 0.3);
+}
+
+.slider input[type="range"]::-moz-range-track {
+    height: 10px;
+    border-radius: 999px;
+    background: var(--track, var(--line));
+}
+
+.slider input[type="range"]::-webkit-slider-thumb {
+    width: 16px;
+    height: 16px;
+    margin-top: -3px;
+    border: 2px solid var(--surface);
+    border-radius: 50%;
+    background: var(--ink);
+    box-shadow: 0 0 0 1px var(--ink);
+    appearance: none;
+    -webkit-appearance: none;
+}
+
+.slider input[type="range"]::-moz-range-thumb {
+    width: 12px;
+    height: 12px;
+    border: 2px solid var(--surface);
+    border-radius: 50%;
+    background: var(--ink);
+}
+
+.slider input[type="range"]:focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: 2px;
+}
+
+#pick-h {
+    --track: linear-gradient(to right, #f00, #ff0 16.7%, #0f0 33.3%, #0ff 50%, #00f 66.7%, #f0f 83.3%, #f00);
+}
+
+.send-test {
+    display: grid;
+    gap: 6px;
+}
+
+.send-test p {
+    margin: 0;
+}
+
+.message-window {
+    margin: 0;
+}
+
+/* ---------- Диалог ---------- */
+
+.dialog {
+    width: min(420px, calc(100vw - 32px));
+    padding: 0;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-l);
+    background: var(--surface);
+    color: var(--ink);
+    box-shadow: var(--shadow);
+}
+
+.dialog::backdrop {
+    background: rgba(10, 12, 18, 0.45);
+}
+
+.dialog-body {
+    display: grid;
+    gap: 14px;
+    padding: 20px;
+}
+
+.dialog-body h2 {
+    margin: 0;
+    font-size: 18px;
+}
+
+.dialog-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+@media (max-width: 960px) {
+    .inspector-panel {
+        max-height: none;
+        overflow: visible;
+    }
+}
+
+@media (max-width: 720px) {
+    .capture-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .capture-layout .screen-map {
+        max-width: 240px;
+    }
+
+    .settings-top .page-title {
+        width: 100%;
+    }
+}
+
+.inspector .swatch {
+    aspect-ratio: auto;
+    height: 52px;
+}
+
+.inspector .snapshot-frame canvas {
+    max-height: 240px;
+}
+
+.profile-bar .state {
+    margin-bottom: 8px;
 }

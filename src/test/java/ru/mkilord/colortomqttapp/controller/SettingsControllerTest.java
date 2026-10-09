@@ -4,11 +4,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Import;
-import org.springframework.context.annotation.Primary;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import ru.mkilord.colortomqttapp.TestProperties;
@@ -17,92 +13,140 @@ import ru.mkilord.colortomqttapp.service.ColorService;
 import ru.mkilord.colortomqttapp.service.SettingsService;
 
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Properties;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(SettingsController.class)
-@Import(SettingsControllerTest.Config.class)
 class SettingsControllerTest {
 
-    @TestConfiguration
-    static class Config {
-        @Bean
-        @Primary
-        Properties properties() {
-            return TestProperties.defaults();
-        }
-    }
+    private static final String MAIN = "Основной";
+    private static final String GAMES = "Игры";
+    private static final String MAIN_URL = SettingsController.pageUrl(MAIN);
 
     @Autowired
     private MockMvc mvc;
-    @Autowired
-    private Properties properties;
     @MockitoBean
     private SettingsService settingsService;
     @MockitoBean
     private ColorService colorService;
 
+    /** Сохраненные настройки профилей, как их держал бы сервис. */
+    private final java.util.Map<String, Properties> stored = new java.util.HashMap<>();
+
     @BeforeEach
-    void resetProperties() {
-        properties.clear();
-        properties.putAll(TestProperties.defaults());
+    void setUp() {
+        stored.clear();
+        stored.put(MAIN, TestProperties.defaults());
+        stored.put(GAMES, TestProperties.defaults());
+        when(settingsService.activeProfile()).thenReturn(MAIN);
+        when(settingsService.profiles()).thenReturn(List.of(GAMES, MAIN));
+        when(settingsService.loadDefault()).thenAnswer(invocation -> TestProperties.defaults());
+        when(settingsService.loadProfile(anyString())).thenAnswer(invocation -> copy(stored.get(invocation.<String>getArgument(0))));
+        doAnswer(invocation -> {
+            stored.put(invocation.getArgument(0), copy(invocation.getArgument(1)));
+            return null;
+        }).when(settingsService).saveProfile(anyString(), any());
+    }
+
+    private static Properties copy(Properties source) {
+        var result = new Properties();
+        result.putAll(source);
+        return result;
     }
 
     @Test
-    void showsCurrentSettings() throws Exception {
+    void showsActiveProfileWithProfileList() throws Exception {
         mvc.perform(get("/settings"))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("tcp://localhost:1883")))
-                .andExpect(content().string(containsString("По допускам H, S, B")));
+                .andExpect(content().string(containsString("По допускам H, S, B")))
+                .andExpect(content().string(containsString(GAMES)))
+                .andExpect(content().string(containsString("settings-defaults")));
     }
 
     @Test
-    void validSettingsAreSavedAndApplied() throws Exception {
-        mvc.perform(formPost("topic", "home/ambilight"))
+    void savesEditedProfileAndAppliesIt() throws Exception {
+        mvc.perform(formPost(GAMES, "maxBrightness", "30"))
                 .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/settings"));
+                .andExpect(redirectedUrl(SettingsController.pageUrl(GAMES)));
 
-        verify(settingsService).save(properties);
+        verify(settingsService).saveProfile(eq(GAMES), any());
         verify(colorService).restartIfRunning();
-        assertThat(properties.getProperty("topic")).isEqualTo("home/ambilight");
+        assertThat(stored.get(GAMES).getProperty("maxBrightness")).isEqualTo("30.0");
+        assertThat(stored.get(MAIN).getProperty("maxBrightness")).isEqualTo("100");
+    }
+
+    @Test
+    void unknownProfileFallsBackToActive() throws Exception {
+        mvc.perform(formPost("Нет такого", "topic", "home/ambilight"))
+                .andExpect(redirectedUrl(MAIN_URL));
+
+        assertThat(stored.get(MAIN).getProperty("topic")).isEqualTo("home/ambilight");
     }
 
     @Test
     void invalidSettingsAreRejectedWithMessage() throws Exception {
-        mvc.perform(formPost("minHue", "300", "maxHue", "100"))
+        mvc.perform(formPost(MAIN, "minHue", "300", "maxHue", "100"))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("Минимум тона больше максимума")));
 
-        verify(settingsService, never()).save(any());
+        verify(settingsService, never()).saveProfile(anyString(), any());
         verify(colorService, never()).restartIfRunning();
     }
 
     @Test
-    void resetRestoresDefaults() throws Exception {
-        var defaults = TestProperties.defaults();
-        when(settingsService.resetToDefaults()).thenReturn(defaults);
+    void fetchSaveAnswersJsonWithoutRedirect() throws Exception {
+        mvc.perform(formPost(MAIN, "maxBrightness", "40").header("X-Requested-With", "fetch"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("Профиль «Основной» сохранен"))
+                .andExpect(jsonPath("$.passwordSet").value(false));
 
-        mvc.perform(post("/settings/reset")).andExpect(redirectedUrl("/settings"));
+        assertThat(stored.get(MAIN).getProperty("maxBrightness")).isEqualTo("40.0");
+    }
 
+    @Test
+    void fetchSaveReportsErrorsByField() throws Exception {
+        mvc.perform(formPost(MAIN, "minBrightness", "80", "maxBrightness", "20", "hueTolerance", "5")
+                        .header("X-Requested-With", "fetch"))
+                .andExpect(status().isUnprocessableEntity())
+                .andExpect(jsonPath("$.errors.brightnessRangeValid").value("Минимум яркости больше максимума"))
+                .andExpect(jsonPath("$.errors.hueTolerance").value("До 1"));
+
+        verify(settingsService, never()).saveProfile(anyString(), any());
+    }
+
+    @Test
+    void resetRestoresProfileDefaults() throws Exception {
+        when(settingsService.resetProfile(GAMES)).thenReturn(TestProperties.defaults());
+
+        mvc.perform(post("/settings/reset").param("profile", GAMES))
+                .andExpect(redirectedUrl(SettingsController.pageUrl(GAMES)));
+
+        verify(settingsService).resetProfile(GAMES);
         verify(colorService).restartIfRunning();
     }
 
     @Test
     void savedPasswordIsNotRenderedOnPage() throws Exception {
-        properties.setProperty("username", "lamp");
-        properties.setProperty("password", "very-secret-value");
+        stored.get(MAIN).setProperty("username", "lamp");
+        stored.get(MAIN).setProperty("password", "very-secret-value");
 
         mvc.perform(get("/settings"))
                 .andExpect(status().isOk())
@@ -112,29 +156,35 @@ class SettingsControllerTest {
 
     @Test
     void emptyPasswordFieldKeepsSavedPassword() throws Exception {
-        properties.setProperty("username", "lamp");
-        properties.setProperty("password", "secret");
+        stored.get(MAIN).setProperty("username", "lamp");
+        stored.get(MAIN).setProperty("password", "secret");
 
-        mvc.perform(formPost("username", "lamp", "password", ""))
-                .andExpect(redirectedUrl("/settings"));
+        mvc.perform(formPost(MAIN, "username", "lamp", "password", ""))
+                .andExpect(redirectedUrl(MAIN_URL));
 
-        assertThat(properties.getProperty("username")).isEqualTo("lamp");
-        assertThat(properties.getProperty("password")).isEqualTo("secret");
+        assertThat(stored.get(MAIN).getProperty("password")).isEqualTo("secret");
     }
 
     @Test
     void credentialsFromFormAreSaved() throws Exception {
-        mvc.perform(formPost("username", "lamp", "password", "pa55"))
-                .andExpect(redirectedUrl("/settings"));
+        mvc.perform(formPost(MAIN, "username", "lamp", "password", "pa55"))
+                .andExpect(redirectedUrl(MAIN_URL));
 
-        assertThat(properties.getProperty("username")).isEqualTo("lamp");
-        assertThat(properties.getProperty("password")).isEqualTo("pa55");
+        assertThat(stored.get(MAIN).getProperty("username")).isEqualTo("lamp");
+        assertThat(stored.get(MAIN).getProperty("password")).isEqualTo("pa55");
+    }
+
+    @Test
+    void defaultsJsonHasNoCredentials() throws Exception {
+        mvc.perform(get("/settings"))
+                .andExpect(content().string(containsString("\"saturationBoost\"")))
+                .andExpect(content().string(not(containsString("\"passwordSet\""))));
     }
 
     /**
      * POST со всеми полями формы из настроек по умолчанию; пары overrides заменяют отдельные поля.
      */
-    private static MockHttpServletRequestBuilder formPost(String... overrides) {
+    private static MockHttpServletRequestBuilder formPost(String profile, String... overrides) {
         var form = SettingsForm.from(TestProperties.defaults());
         var params = new LinkedHashMap<String, String>();
         params.put("broker", form.getBroker());
@@ -174,7 +224,7 @@ class SettingsControllerTest {
         for (int i = 0; i + 1 < overrides.length; i += 2) {
             params.put(overrides[i], overrides[i + 1]);
         }
-        var request = post("/settings");
+        var request = post("/settings").param("profile", profile);
         params.forEach(request::param);
         return request;
     }

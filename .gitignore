@@ -37,3 +37,8 @@ build/
 ### App ###
 logs/
 settings.txt
+
+### ColorToMQTT ###
+settings.txt
+profiles/
+logs/

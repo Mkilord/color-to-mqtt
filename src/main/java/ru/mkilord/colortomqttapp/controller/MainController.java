@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import ru.mkilord.colortomqttapp.service.ColorService;
+import ru.mkilord.colortomqttapp.service.SettingsService;
 
 import static lombok.AccessLevel.PRIVATE;
 
@@ -21,10 +22,13 @@ import static lombok.AccessLevel.PRIVATE;
 @FieldDefaults(level = PRIVATE, makeFinal = true)
 public class MainController {
     ColorService colorService;
+    SettingsService settingsService;
 
     @GetMapping
     public String index(Model model) {
         model.addAttribute("status", colorService.getStatus());
+        model.addAttribute("profiles", settingsService.profiles());
+        model.addAttribute("activeProfile", settingsService.activeProfile());
         return "index";
     }
 

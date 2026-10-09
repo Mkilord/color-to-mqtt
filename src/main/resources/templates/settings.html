@@ -4,14 +4,40 @@
 <body class="page-settings">
 <header th:replace="~{fragments/layout :: header('settings')}"></header>
 
-<main class="settings">
+<main class="settings" id="settings">
 	<div class="settings-main">
-		<h1 class="page-title">Настройки</h1>
+		<div class="settings-top">
+			<h1 class="page-title">Настройки</h1>
+			<div class="profile-bar" role="group" aria-label="Профиль">
+				<label class="profile-select">
+					<span class="field-label">Профиль</span>
+					<span class="input-wrap"><select id="profile-select">
+						<option th:each="p : ${profiles}" th:selected="${p == profile}" th:text="${p}" th:value="${p}">Профиль</option>
+					</select></span>
+				</label>
+				<span class="state" data-kind="ok" id="profile-active-badge" th:hidden="${profile != activeProfile}">Активный</span>
+				<button class="button small" id="profile-activate" th:hidden="${profile == activeProfile}" type="button">Сделать активным</button>
+				<div class="profile-actions">
+					<button class="button small" id="profile-new" type="button">Новый</button>
+					<button class="button small" id="profile-rename" type="button">Переименовать</button>
+					<button class="button small ghost" id="profile-delete" type="button">Удалить</button>
+				</div>
+			</div>
+			<label class="switch">
+				<input id="advanced-toggle" role="switch" type="checkbox"/>
+				<span class="switch-track" aria-hidden="true"></span>
+				<span>Расширенные настройки</span>
+			</label>
+			<span class="advanced-state" data-advanced>
+				<span class="muted small" id="advanced-changed"></span>
+				<button class="link-button" hidden id="advanced-reset" type="button">Вернуть умолчания</button>
+			</span>
+		</div>
 
 		<p class="flash" role="status" th:if="${message}" th:text="${message}">Настройки сохранены</p>
 
-		<form class="settings-form" id="settings-form" method="post" th:action="@{/settings}" th:object="${form}">
-			<div class="alert error" role="alert" th:if="${#fields.hasErrors('*')}">
+		<form class="settings-form" id="settings-form" method="post" th:action="@{/settings(profile=${profile})}" th:attr="data-profile=${profile}" th:object="${form}">
+			<div class="alert error" id="form-errors" role="alert" th:if="${#fields.hasErrors('*')}">
 				<p class="alert-title">Настройки не сохранены. Исправьте поля:</p>
 				<ul>
 					<li th:each="error : ${#fields.errors('*')}" th:text="${error}">ошибка</li>
@@ -20,11 +46,10 @@
 
 			<section aria-labelledby="group-mqtt" class="group">
 				<div class="group-head">
-					<h2 id="group-mqtt">Брокер MQTT</h2>
+					<h2 id="group-mqtt">Подключение<span class="group-note">Общее для всех профилей</span></h2>
 					<p>Куда отправлять цвет. Логин и пароль нужны, если брокер требует авторизацию.</p>
 				</div>
 				<div class="fields">
-
 				<label class="field wide">
 					<span class="field-label">Адрес брокера</span>
 					<span class="input-wrap"><input autocomplete="off" placeholder="tcp://192.168.0.10:1883" spellcheck="false" type="text" th:errorclass="invalid" th:field="*{broker}"/></span>
@@ -47,7 +72,7 @@
 						       th:placeholder="${form.passwordSet} ? 'Сохранен' : 'Не задан'" type="password"/>
 						<button aria-controls="password" aria-pressed="false" class="input-action" id="password-toggle" type="button">Показать</button>
 					</span>
-					<span class="field-hint">Хранится в settings.txt на этом компьютере. Если очистить логин, пароль тоже удалится.</span>
+					<span class="field-hint">Хранится в settings.txt на этом компьютере. Пустое поле оставляет сохраненный пароль.</span>
 					<span class="field-error" th:errors="*{password}" th:if="${#fields.hasErrors('password')}"></span>
 				</label>
 				<input th:field="*{passwordSet}" type="hidden"/>
@@ -59,8 +84,8 @@
 					<h2 id="group-capture">Область захвата</h2>
 					<p>Прямоугольник в центре экрана, по которому считается цвет.</p>
 				</div>
+				<div class="capture-layout">
 				<div class="fields">
-
 				<label class="field">
 					<span class="field-label">Ширина</span>
 					<span class="input-wrap"><input inputmode="decimal" type="number" min="1" data-live th:errorclass="invalid" th:field="*{screenWidth}"/><span class="unit">px</span></span>
@@ -71,51 +96,46 @@
 					<span class="input-wrap"><input inputmode="decimal" type="number" min="1" data-live th:errorclass="invalid" th:field="*{screenHeight}"/><span class="unit">px</span></span>
 					<span class="field-error" th:errors="*{screenHeight}" th:if="${#fields.hasErrors('screenHeight')}"></span>
 				</label>
-				<label class="field">
+				<label class="field" data-advanced>
 					<span class="field-label">Шаг сетки</span>
 					<span class="input-wrap"><input inputmode="decimal" type="number" min="1" data-live th:errorclass="invalid" th:field="*{cellSize}"/><span class="unit">px</span></span>
 					<span class="field-hint">Из клетки берется один пиксель. Меньше шаг, точнее и дороже расчет.</span>
 					<span class="field-error" th:errors="*{cellSize}" th:if="${#fields.hasErrors('cellSize')}"></span>
 				</label>
-				<label class="field">
+				<label class="field" data-advanced>
+					<span class="field-label">Порядок обхода</span>
+					<span class="input-wrap"><select id="processor" data-live th:errorclass="invalid" th:field="*{processor}">
+						<option th:each="p : ${processors}" th:text="${p.value}" th:value="${p.key}">порядок</option>
+					</select></span>
+					<span class="field-hint">В шахматном порядке точек вдвое меньше.</span>
+					<span class="field-error" th:errors="*{processor}" th:if="${#fields.hasErrors('processor')}"></span>
+				</label>
+				<label class="field" data-advanced>
 					<span class="field-label">Пауза между кадрами</span>
 					<span class="input-wrap"><input inputmode="decimal" type="number" min="1" th:errorclass="invalid" th:field="*{updatePeriod}"/><span class="unit">мс</span></span>
-					<span class="field-hint">Меньше пауза, быстрее реакция, выше нагрузка.</span>
+					<span class="field-hint">Меньше пауза, быстрее реакция и выше нагрузка. 25-40 мс хватает.</span>
 					<span class="field-error" th:errors="*{updatePeriod}" th:if="${#fields.hasErrors('updatePeriod')}"></span>
 				</label>
-				<label class="field">
+				<label class="field" data-advanced>
 					<span class="field-label">Пауза в покое</span>
-					<span class="input-wrap"><input inputmode="numeric" type="number" max="5000" min="0" step="10" th:errorclass="invalid" th:field="*{idlePeriod}"/><span class="unit">мс</span></span>
-					<span class="field-hint">Если экран не меняется 3 секунды, кадры снимаются реже. Первая смена после покоя запаздывает не больше этой паузы. 0 отключает.</span>
+					<span class="input-wrap"><input inputmode="decimal" type="number" max="5000" min="0" step="10" th:errorclass="invalid" th:field="*{idlePeriod}"/><span class="unit">мс</span></span>
+					<span class="field-hint">Если экран не меняется 3 секунды, кадры снимаются реже. 0 отключает.</span>
 					<span class="field-error" th:errors="*{idlePeriod}" th:if="${#fields.hasErrors('idlePeriod')}"></span>
 				</label>
 				</div>
-				<div class="capture-preview">
-					<figure class="screen-map">
-						<div class="screen-map-frame" id="screen-map">
-							<div class="screen-map-area" id="screen-map-area"></div>
-						</div>
-						<figcaption id="screen-map-caption">Положение области на экране</figcaption>
-					</figure>
-					<figure class="snapshot">
-						<div class="snapshot-frame">
-							<canvas aria-label="Снимок области захвата с отмеченными точками замера" height="0" id="snapshot-canvas" role="img" width="0"></canvas>
-							<p class="snapshot-empty" id="snapshot-empty">Сделайте снимок, чтобы увидеть, что попадает в область и по каким точкам считается цвет.</p>
-						</div>
-						<figcaption class="snapshot-bar">
-							<button class="button" id="snapshot-button" type="button">Сделать снимок</button>
-							<label class="check"><input id="snapshot-auto" type="checkbox"/> Обновлять каждую секунду</label>
-							<label class="check"><input checked id="snapshot-grid" type="checkbox"/> Точки замера</label>
-							<span class="snapshot-average" hidden id="snapshot-average"><span class="chip" id="snapshot-average-chip"></span><span id="snapshot-average-text"></span></span>
-						</figcaption>
-					</figure>
+				<figure class="screen-map">
+					<div class="screen-map-frame" id="screen-map">
+						<div class="screen-map-area" id="screen-map-area"></div>
+					</div>
+					<figcaption id="screen-map-caption">Положение области на экране</figcaption>
+				</figure>
 				</div>
 			</section>
 
-			<section aria-labelledby="group-detect" class="group">
+			<section aria-labelledby="group-detect" class="group" data-advanced>
 				<div class="group-head">
-					<h2 id="group-detect">Расчет цвета</h2>
-					<p>Как из точек области получается один цвет для ламп. Результат виден на снимке выше.</p>
+					<h2 id="group-detect">Распознавание</h2>
+					<p>Как из точек области получается один цвет. Проверяйте на снимке справа.</p>
 				</div>
 				<div class="fields">
 				<label class="field wide">
@@ -125,138 +145,51 @@
 					</select></span>
 					<span class="field-hint" id="detector-help"></span>
 					<span class="field-error" th:errors="*{detector}" th:if="${#fields.hasErrors('detector')}"></span>
-					<span class="field-error" th:errors="*{detectorKnown}" th:if="${#fields.hasErrors('detectorKnown')}"></span>
 				</label>
 				<label class="field" data-for-detector="ru.mkilord.colortomqttapp.core.detector.DominantColorDetector">
 					<span class="field-label">Минимальная доля цвета</span>
 					<span class="input-wrap"><input inputmode="decimal" type="number" max="100" min="0" step="1" data-live th:errorclass="invalid" th:field="*{dominantMinShare}"/><span class="unit">%</span></span>
-					<span class="field-hint">Если цветных точек меньше, цвета на экране нет или он мелкий, и берется простое среднее.</span>
+					<span class="field-hint">Если цветных точек меньше, берется простое среднее.</span>
 					<span class="field-error" th:errors="*{dominantMinShare}" th:if="${#fields.hasErrors('dominantMinShare')}"></span>
 				</label>
 				<label class="field">
-					<span class="field-label">Порядок обхода</span>
-					<span class="input-wrap"><select id="processor" data-live th:errorclass="invalid" th:field="*{processor}">
-						<option th:each="p : ${processors}" th:text="${p.value}" th:value="${p.key}">порядок</option>
-					</select></span>
-					<span class="field-hint">В шахматном порядке точек вдвое меньше, чем в каждой клетке.</span>
-					<span class="field-error" th:errors="*{processor}" th:if="${#fields.hasErrors('processor')}"></span>
-					<span class="field-error" th:errors="*{processorKnown}" th:if="${#fields.hasErrors('processorKnown')}"></span>
-				</label>
-				</div>
-			</section>
-
-			<section aria-labelledby="group-send" class="group">
-				<div class="group-head">
-					<h2 id="group-send">Когда отправлять цвет</h2>
-					<p>Сообщение уходит, только если новый цвет отличается от последнего отправленного.</p>
-				</div>
-				<div class="fields">
-				<label class="field wide">
-					<span class="field-label">Способ сравнения</span>
-					<span class="input-wrap"><select id="tracker" th:errorclass="invalid" th:field="*{stateTracker}">
-						<option th:each="tracker : ${trackers}" th:text="${tracker.value}" th:value="${tracker.key}">способ</option>
-					</select></span>
-					<span class="field-hint" id="tracker-help"></span>
-					<span class="field-error" th:errors="*{stateTracker}" th:if="${#fields.hasErrors('stateTracker')}"></span>
-				</label>
-
-				<label class="field" data-for="ru.mkilord.colortomqttapp.core.tracker.ToleranceColorStateTracker">
-					<span class="field-label">Допуск тона</span>
-					<span class="input-wrap"><input inputmode="decimal" type="number" max="1" min="0" step="0.01" th:errorclass="invalid" th:field="*{hueTolerance}"/><span class="unit">доля</span></span>
-					<span class="field-hint">0.1 это 36°</span>
-					<span class="field-error" th:errors="*{hueTolerance}" th:if="${#fields.hasErrors('hueTolerance')}"></span>
-				</label>
-				<label class="field" data-for="ru.mkilord.colortomqttapp.core.tracker.ToleranceColorStateTracker">
-					<span class="field-label">Допуск насыщенности</span>
-					<span class="input-wrap"><input inputmode="decimal" type="number" max="1" min="0" step="0.01" th:errorclass="invalid" th:field="*{saturationTolerance}"/><span class="unit">доля</span></span>
-					<span class="field-error" th:errors="*{saturationTolerance}" th:if="${#fields.hasErrors('saturationTolerance')}"></span>
-				</label>
-				<label class="field" data-for="ru.mkilord.colortomqttapp.core.tracker.ToleranceColorStateTracker">
-					<span class="field-label">Допуск яркости</span>
-					<span class="input-wrap"><input inputmode="decimal" type="number" max="1" min="0" step="0.01" th:errorclass="invalid" th:field="*{brightnessTolerance}"/><span class="unit">доля</span></span>
-					<span class="field-error" th:errors="*{brightnessTolerance}" th:if="${#fields.hasErrors('brightnessTolerance')}"></span>
-				</label>
-				<label class="field" data-for="ru.mkilord.colortomqttapp.core.tracker.DefaultColorStateTracker">
-					<span class="field-label">Порог отличия</span>
-					<span class="input-wrap"><input inputmode="decimal" type="number" max="100" min="0" th:errorclass="invalid" th:field="*{sensitivity}"/><span class="unit">%</span></span>
-					<span class="field-hint">Процент от максимального расстояния в RGB.</span>
-					<span class="field-error" th:errors="*{sensitivity}" th:if="${#fields.hasErrors('sensitivity')}"></span>
-				</label>
-				<label class="field">
-					<span class="field-label">Сглаживание вспышек</span>
-					<span class="input-wrap"><input inputmode="numeric" type="number" max="5000" min="0" step="10" th:errorclass="invalid" th:field="*{holdTime}"/><span class="unit">мс</span></span>
-					<span class="field-hint">Новый цвет уходит, только если продержался столько времени. Более короткие вспышки пропускаются, лампы не мигают. 0 отключает.</span>
-					<span class="field-error" th:errors="*{holdTime}" th:if="${#fields.hasErrors('holdTime')}"></span>
-				</label>
-				</div>
-				<div aria-labelledby="message-title" class="message-window" role="group">
-					<div class="message-head">
-						<span id="message-title">Сообщение в MQTT</span>
-						<span class="muted">QoS 0, без retain</span>
-					</div>
-					<dl class="message-body">
-						<div><dt>Топик</dt><dd class="mono" id="message-topic"></dd></div>
-						<div><dt>Тело</dt><dd><code class="mono" id="message-payload"></code></dd></div>
-					</dl>
-					<p class="message-note">Пример для проверочного цвета справа: <code>hue</code> тон в градусах 0..360, <code>sat</code> и <code>brightness</code> в процентах 0..100, все значения целые.</p>
-				</div>
-			</section>
-
-			<section aria-labelledby="group-zones" class="group">
-				<div class="group-head">
-					<h2 id="group-zones">Темные и серые кадры</h2>
-					<p>У почти черного и почти серого экрана оттенок случайный, поэтому такие кадры отправляются без цвета. Переход между черным, серым и цветным отправляется без учета допусков, если новое состояние продержалось время сглаживания.</p>
-				</div>
-				<div class="fields">
-
-				<label class="field">
 					<span class="field-label">Порог черного</span>
 					<span class="input-wrap"><input inputmode="decimal" type="number" max="50" min="0" step="1" data-live th:errorclass="invalid" th:field="*{blackThreshold}"/><span class="unit">%</span></span>
-					<span class="field-hint">Если яркость ниже, уходит яркость 0: светильник можно выключить. 0 отключает.</span>
+					<span class="field-hint">Темнее уходит яркость 0, лампы гаснут. 0 отключает.</span>
 					<span class="field-error" th:errors="*{blackThreshold}" th:if="${#fields.hasErrors('blackThreshold')}"></span>
 				</label>
 				<label class="field">
 					<span class="field-label">Порог серого</span>
 					<span class="input-wrap"><input inputmode="decimal" type="number" max="100" min="0" step="1" data-live th:errorclass="invalid" th:field="*{grayThreshold}"/><span class="unit">%</span></span>
-					<span class="field-hint">Если насыщенность ниже, уходит белый: тон 0, насыщенность 1, чтобы лампы остались в цветном режиме. Яркость корректируется как обычно. 0 отключает.</span>
+					<span class="field-hint">Бледнее уходит белый в цветном режиме. 0 отключает.</span>
 					<span class="field-error" th:errors="*{grayThreshold}" th:if="${#fields.hasErrors('grayThreshold')}"></span>
 				</label>
 				</div>
 			</section>
 
-			<section aria-labelledby="group-correction" class="group">
+			<section aria-labelledby="group-color" class="group">
 				<div class="group-head">
-					<h2 id="group-correction">Коррекция цвета</h2>
-					<p>Сдвиг и усиление перед отправкой, только для цветных кадров. Тон сдвигается по кругу, насыщенность и яркость упираются в 0 и 100.</p>
+					<h2 id="group-color">Цвет на лампах</h2>
+					<p>Как цвет экрана переводится в цвет ламп.</p>
 				</div>
 				<div class="fields">
-
-				<label class="field">
-					<span class="field-label">Тон</span>
-					<span class="input-wrap"><input inputmode="decimal" type="number" step="1" data-live th:errorclass="invalid" th:field="*{modifyHue}"/><span class="unit">°</span></span>
-					<span class="field-error" th:errors="*{modifyHue}" th:if="${#fields.hasErrors('modifyHue')}"></span>
-				</label>
-				<label class="field">
-					<span class="field-label">Насыщенность</span>
-					<span class="input-wrap"><input inputmode="decimal" type="number" step="1" data-live th:errorclass="invalid" th:field="*{modifySaturation}"/><span class="unit">%</span></span>
-					<span class="field-error" th:errors="*{modifySaturation}" th:if="${#fields.hasErrors('modifySaturation')}"></span>
-				</label>
-				<label class="field">
-					<span class="field-label">Яркость</span>
-					<span class="input-wrap"><input inputmode="decimal" type="number" step="1" data-live th:errorclass="invalid" th:field="*{modifyBrightness}"/><span class="unit">%</span></span>
-					<span class="field-error" th:errors="*{modifyBrightness}" th:if="${#fields.hasErrors('modifyBrightness')}"></span>
-				</label>
 				<label class="field">
 					<span class="field-label">Усиление насыщенности</span>
 					<span class="input-wrap"><input inputmode="decimal" type="number" max="100" min="0" step="5" data-live th:errorclass="invalid" th:field="*{saturationBoost}"/><span class="unit">%</span></span>
-					<span class="field-hint">Приближает насыщенность к 100: при 40% 65 становится 79. Делает красный красным, а не коралловым. 0 без изменений.</span>
+					<span class="field-hint">Делает цвета на лампах сочнее: при 40% насыщенность 65 становится 79. 0 без изменений.</span>
 					<span class="field-error" th:errors="*{saturationBoost}" th:if="${#fields.hasErrors('saturationBoost')}"></span>
 				</label>
+				<label class="field">
+					<span class="field-label">Яркость ламп до</span>
+					<span class="input-wrap"><input inputmode="decimal" type="number" max="100" min="0" step="1" data-live th:errorclass="invalid" th:field="*{maxBrightness}"/><span class="unit">%</span></span>
+					<span class="field-hint">Выше яркость не поднимется, даже на белом экране.</span>
+					<span class="field-error" th:errors="*{maxBrightness}" th:if="${#fields.hasErrors('maxBrightness')}"></span>
+				</label>
 				</div>
-				<div class="hue-shifts">
-					<div class="hue-shifts-head">
+				<div class="subgroup">
+					<div class="subgroup-head">
 						<h3>Оттенки ламп</h3>
-						<p class="muted small">Поправка тона для каждого цвета отдельно, если лампы передают его не так, как монитор. Например, зеленый уходит в бирюзовый: поставьте зеленому -15...-25. Между цветами поправка меняется плавно. Подбирайте с кнопкой «Отправить на лампы» в панели проверки.</p>
+						<p class="muted small">Поправка тона для каждого цвета, если лампы передают его не так, как монитор. Например, зеленый уходит в бирюзовый: поставьте зеленому -15...-25. Подбирайте кнопкой «Отправить на лампы» справа.</p>
 					</div>
 					<div class="fields hue-shift-fields">
 					<label class="field">
@@ -291,15 +224,27 @@
 					</label>
 					</div>
 				</div>
-			</section>
-
-			<section aria-labelledby="group-limits" class="group">
-				<div class="group-head">
-					<h2 id="group-limits">Ограничения</h2>
-					<p>Допустимые значения после коррекции. На черные кадры не действуют, у серых ограничивается только яркость.</p>
-				</div>
-				<div class="fields range-fields">
-
+				<div class="subgroup" data-advanced>
+					<div class="subgroup-head">
+						<h3>Сдвиг и диапазоны</h3>
+						<p class="muted small">Сдвиг применяется ко всем цветным кадрам, затем значения ограничиваются диапазонами. На черные кадры не действует.</p>
+					</div>
+					<div class="fields range-fields">
+					<label class="field">
+					<span class="field-label">Сдвиг тона</span>
+					<span class="input-wrap"><input inputmode="decimal" type="number" step="1" data-live th:errorclass="invalid" th:field="*{modifyHue}"/><span class="unit">°</span></span>
+					<span class="field-error" th:errors="*{modifyHue}" th:if="${#fields.hasErrors('modifyHue')}"></span>
+				</label>
+				<label class="field">
+					<span class="field-label">Сдвиг насыщенности</span>
+					<span class="input-wrap"><input inputmode="decimal" type="number" step="1" data-live th:errorclass="invalid" th:field="*{modifySaturation}"/><span class="unit">%</span></span>
+					<span class="field-error" th:errors="*{modifySaturation}" th:if="${#fields.hasErrors('modifySaturation')}"></span>
+				</label>
+				<label class="field">
+					<span class="field-label">Сдвиг яркости</span>
+					<span class="input-wrap"><input inputmode="decimal" type="number" step="1" data-live th:errorclass="invalid" th:field="*{modifyBrightness}"/><span class="unit">%</span></span>
+					<span class="field-error" th:errors="*{modifyBrightness}" th:if="${#fields.hasErrors('modifyBrightness')}"></span>
+				</label>
 				<label class="field">
 					<span class="field-label">Тон от</span>
 					<span class="input-wrap"><input inputmode="decimal" type="number" max="360" min="0" step="1" data-live th:errorclass="invalid" th:field="*{minHue}"/><span class="unit">°</span></span>
@@ -310,7 +255,6 @@
 					<span class="input-wrap"><input inputmode="decimal" type="number" max="360" min="0" step="1" data-live th:errorclass="invalid" th:field="*{maxHue}"/><span class="unit">°</span></span>
 					<span class="field-error" th:errors="*{maxHue}" th:if="${#fields.hasErrors('maxHue')}"></span>
 				</label>
-				<p class="field-error range-error" th:errors="*{hueRangeValid}" th:if="${#fields.hasErrors('hueRangeValid')}"></p>
 				<label class="field">
 					<span class="field-label">Насыщенность от</span>
 					<span class="input-wrap"><input inputmode="decimal" type="number" max="100" min="0" step="1" data-live th:errorclass="invalid" th:field="*{minSaturation}"/><span class="unit">%</span></span>
@@ -321,58 +265,119 @@
 					<span class="input-wrap"><input inputmode="decimal" type="number" max="100" min="0" step="1" data-live th:errorclass="invalid" th:field="*{maxSaturation}"/><span class="unit">%</span></span>
 					<span class="field-error" th:errors="*{maxSaturation}" th:if="${#fields.hasErrors('maxSaturation')}"></span>
 				</label>
-				<p class="field-error range-error" th:errors="*{saturationRangeValid}" th:if="${#fields.hasErrors('saturationRangeValid')}"></p>
 				<label class="field">
 					<span class="field-label">Яркость от</span>
 					<span class="input-wrap"><input inputmode="decimal" type="number" max="100" min="0" step="1" data-live th:errorclass="invalid" th:field="*{minBrightness}"/><span class="unit">%</span></span>
 					<span class="field-error" th:errors="*{minBrightness}" th:if="${#fields.hasErrors('minBrightness')}"></span>
 				</label>
+					</div>
+				</div>
+			</section>
+
+			<section aria-labelledby="group-send" class="group">
+				<div class="group-head">
+					<h2 id="group-send">Отправка</h2>
+					<p>Когда новый цвет уходит в MQTT.</p>
+				</div>
+				<div class="fields">
 				<label class="field">
-					<span class="field-label">Яркость до</span>
-					<span class="input-wrap"><input inputmode="decimal" type="number" max="100" min="0" step="1" data-live th:errorclass="invalid" th:field="*{maxBrightness}"/><span class="unit">%</span></span>
-					<span class="field-error" th:errors="*{maxBrightness}" th:if="${#fields.hasErrors('maxBrightness')}"></span>
+					<span class="field-label">Сглаживание вспышек</span>
+					<span class="input-wrap"><input inputmode="decimal" type="number" max="5000" min="0" step="10" th:errorclass="invalid" th:field="*{holdTime}"/><span class="unit">мс</span></span>
+					<span class="field-hint">Новый цвет уходит, только если продержался столько времени. Короткие вспышки пропускаются. 0 отключает.</span>
+					<span class="field-error" th:errors="*{holdTime}" th:if="${#fields.hasErrors('holdTime')}"></span>
 				</label>
-				<p class="field-error range-error" th:errors="*{brightnessRangeValid}" th:if="${#fields.hasErrors('brightnessRangeValid')}"></p>
+				<label class="field wide" data-advanced>
+					<span class="field-label">Способ сравнения</span>
+					<span class="input-wrap"><select id="tracker" th:errorclass="invalid" th:field="*{stateTracker}">
+						<option th:each="tracker : ${trackers}" th:text="${tracker.value}" th:value="${tracker.key}">способ</option>
+					</select></span>
+					<span class="field-hint" id="tracker-help"></span>
+					<span class="field-error" th:errors="*{stateTracker}" th:if="${#fields.hasErrors('stateTracker')}"></span>
+				</label>
+				<label class="field" data-advanced data-for="ru.mkilord.colortomqttapp.core.tracker.ToleranceColorStateTracker">
+					<span class="field-label">Допуск тона</span>
+					<span class="input-wrap"><input inputmode="decimal" type="number" max="1" min="0" step="0.01" th:errorclass="invalid" th:field="*{hueTolerance}"/><span class="unit">доля</span></span>
+					<span class="field-hint">0.1 это 36°</span>
+					<span class="field-error" th:errors="*{hueTolerance}" th:if="${#fields.hasErrors('hueTolerance')}"></span>
+				</label>
+				<label class="field" data-advanced data-for="ru.mkilord.colortomqttapp.core.tracker.ToleranceColorStateTracker">
+					<span class="field-label">Допуск насыщенности</span>
+					<span class="input-wrap"><input inputmode="decimal" type="number" max="1" min="0" step="0.01" th:errorclass="invalid" th:field="*{saturationTolerance}"/><span class="unit">доля</span></span>
+					<span class="field-error" th:errors="*{saturationTolerance}" th:if="${#fields.hasErrors('saturationTolerance')}"></span>
+				</label>
+				<label class="field" data-advanced data-for="ru.mkilord.colortomqttapp.core.tracker.ToleranceColorStateTracker">
+					<span class="field-label">Допуск яркости</span>
+					<span class="input-wrap"><input inputmode="decimal" type="number" max="1" min="0" step="0.01" th:errorclass="invalid" th:field="*{brightnessTolerance}"/><span class="unit">доля</span></span>
+					<span class="field-error" th:errors="*{brightnessTolerance}" th:if="${#fields.hasErrors('brightnessTolerance')}"></span>
+				</label>
+				<label class="field" data-advanced data-for="ru.mkilord.colortomqttapp.core.tracker.DefaultColorStateTracker">
+					<span class="field-label">Порог отличия</span>
+					<span class="input-wrap"><input inputmode="decimal" type="number" max="100" min="0" th:errorclass="invalid" th:field="*{sensitivity}"/><span class="unit">%</span></span>
+					<span class="field-hint">Процент от максимального расстояния в RGB.</span>
+					<span class="field-error" th:errors="*{sensitivity}" th:if="${#fields.hasErrors('sensitivity')}"></span>
+				</label>
 				</div>
 			</section>
 
 			<div class="actions-bar">
-				<button class="button ghost" data-confirm="Вернуть все настройки к значениям по умолчанию? Логин и пароль тоже сбросятся." form="reset-form" type="submit">Сбросить настройки</button>
+				<button class="button ghost" id="reset-button" form="reset-form" type="submit"
+				        th:attr="data-confirm='Вернуть профиль «' + ${profile} + '» к настройкам по умолчанию? Подключение к MQTT не изменится.'">Сбросить профиль</button>
 				<span class="muted small" hidden id="dirty-note">Есть несохраненные изменения</span>
-				<button class="button primary" type="submit">Сохранить и применить</button>
+				<button class="button primary" id="save-button" type="submit">Сохранить и применить</button>
 			</div>
 		</form>
-		<form id="reset-form" method="post" th:action="@{/settings/reset}"></form>
+		<form id="reset-form" method="post" th:action="@{/settings/reset(profile=${profile})}"></form>
 	</div>
 
 	<aside aria-labelledby="inspector-title" class="inspector">
 		<div class="panel inspector-panel">
-			<h2 class="panel-title" id="inspector-title">Проверка цвета</h2>
-			<p class="muted small">Как коррекция и ограничения изменят цвет. Значения берутся из формы, сохранять не нужно.</p>
-			<div class="sample-row">
-				<label class="sample-picker">
-					<span class="field-label">Цвет экрана</span>
-					<input id="sample-color" type="color" value="#3f7fd0"/>
-				</label>
-				<button class="button small" id="sample-current" type="button">Взять текущий</button>
+			<h2 class="panel-title" id="inspector-title">Проверка</h2>
+
+			<figure class="snapshot">
+				<div class="snapshot-frame">
+					<canvas aria-label="Снимок области захвата с отмеченными точками замера" height="0" id="snapshot-canvas" role="img" width="0"></canvas>
+					<p class="snapshot-empty" id="snapshot-empty">Снимок покажет, что попадает в область и какие точки вошли в цвет.</p>
+				</div>
+				<figcaption class="snapshot-bar">
+					<button class="button small" id="snapshot-button" type="button">Снимок</button>
+					<label class="check"><input id="snapshot-auto" type="checkbox"/> Каждую секунду</label>
+					<label class="check"><input checked id="snapshot-grid" type="checkbox"/> Точки</label>
+				</figcaption>
+				<p class="snapshot-result muted small" hidden id="snapshot-result"></p>
+			</figure>
+
+			<div class="picker" role="group" aria-labelledby="picker-title">
+				<div class="picker-head">
+					<span class="field-label" id="picker-title">Цвет экрана</span>
+					<button class="link-button" id="sample-current" type="button">Взять текущий</button>
+				</div>
+				<div class="picker-main">
+					<span class="picker-swatch" id="picker-swatch"></span>
+					<input aria-label="Цвет в HEX" class="picker-hex mono" id="picker-hex" maxlength="7" spellcheck="false" type="text" value="#3f7fd0"/>
+					<div class="sample-chips" aria-label="Чистые цвета">
+						<button class="chip-button" data-sample="#ff0000" style="--chip:#ff0000" title="Красный" type="button"></button>
+						<button class="chip-button" data-sample="#ffff00" style="--chip:#ffff00" title="Желтый" type="button"></button>
+						<button class="chip-button" data-sample="#00ff00" style="--chip:#00ff00" title="Зеленый" type="button"></button>
+						<button class="chip-button" data-sample="#00ffff" style="--chip:#00ffff" title="Голубой" type="button"></button>
+						<button class="chip-button" data-sample="#0000ff" style="--chip:#0000ff" title="Синий" type="button"></button>
+						<button class="chip-button" data-sample="#ff00ff" style="--chip:#ff00ff" title="Пурпурный" type="button"></button>
+						<button class="chip-button" data-sample="#ffffff" style="--chip:#ffffff" title="Белый" type="button"></button>
+					</div>
+				</div>
+				<label class="slider"><span>Тон</span><input id="pick-h" max="360" min="0" step="1" type="range"/><output id="pick-h-value"></output></label>
+				<label class="slider"><span>Насыщ.</span><input id="pick-s" max="100" min="0" step="1" type="range"/><output id="pick-s-value"></output></label>
+				<label class="slider"><span>Яркость</span><input id="pick-b" max="100" min="0" step="1" type="range"/><output id="pick-b-value"></output></label>
+				<input id="sample-color" type="hidden" value="#3f7fd0"/>
 			</div>
-			<div class="sample-actions" aria-label="Чистые цвета для проверки">
-				<button class="chip-button" data-sample="#ff0000" style="--chip:#ff0000" title="Красный" type="button"></button>
-				<button class="chip-button" data-sample="#ffff00" style="--chip:#ffff00" title="Желтый" type="button"></button>
-				<button class="chip-button" data-sample="#00ff00" style="--chip:#00ff00" title="Зеленый" type="button"></button>
-				<button class="chip-button" data-sample="#00ffff" style="--chip:#00ffff" title="Голубой" type="button"></button>
-				<button class="chip-button" data-sample="#0000ff" style="--chip:#0000ff" title="Синий" type="button"></button>
-				<button class="chip-button" data-sample="#ff00ff" style="--chip:#ff00ff" title="Пурпурный" type="button"></button>
-				<button class="button small" id="send-test" type="button">Отправить на лампы</button>
-			</div>
-			<p class="muted small">Отправка берет значения из формы, даже несохраненные. Пока захват идет, следующая смена экрана заменит цвет.</p>
+
 			<ol class="swatch-flow" aria-label="Цвет на каждом шаге">
 				<li><span class="swatch" id="swatch-source"></span><span>Экран</span></li>
 				<li><span class="swatch" id="swatch-modified"></span><span>После коррекции</span></li>
-				<li><span class="swatch" id="swatch-sent"></span><span>Отправится</span></li>
+				<li><span class="swatch" id="swatch-sent"></span><span>На лампы</span></li>
 			</ol>
 			<p class="zone-note" hidden id="zone-note"></p>
-			<div class="bars">
+
+			<div class="bars" data-advanced>
 				<div class="bar-row" data-channel="h">
 					<div class="bar-label"><span>Тон</span><span class="bar-value" id="value-h"></span></div>
 					<div class="bar" id="bar-h"><span class="bar-mask left"></span><span class="bar-mask right"></span><span class="marker before"></span><span class="marker after"></span></div>
@@ -385,16 +390,50 @@
 					<div class="bar-label"><span>Яркость</span><span class="bar-value" id="value-b"></span></div>
 					<div class="bar" id="bar-b"><span class="bar-mask left"></span><span class="bar-mask right"></span><span class="marker before"></span><span class="marker after"></span></div>
 				</div>
+				<ul class="legend">
+					<li><span class="marker-key before"></span>После коррекции</li>
+					<li><span class="marker-key after"></span>На лампы</li>
+					<li><span class="marker-key masked"></span>Отсекают диапазоны</li>
+				</ul>
 			</div>
-			<ul class="legend">
-				<li><span class="marker-key before"></span>После коррекции</li>
-				<li><span class="marker-key after"></span>Отправится</li>
-				<li><span class="marker-key masked"></span>Отсекают ограничения</li>
-			</ul>
+
+			<div aria-labelledby="message-title" class="message-window" role="group">
+				<div class="message-head">
+					<span id="message-title">Сообщение в MQTT</span>
+					<span class="muted">QoS 0</span>
+				</div>
+				<dl class="message-body">
+					<div><dt>Топик</dt><dd class="mono" id="message-topic"></dd></div>
+					<div><dt>Тело</dt><dd><code class="mono" id="message-payload"></code></dd></div>
+				</dl>
+			</div>
+
+			<div class="send-test">
+				<button class="button primary" id="send-test" type="button">Отправить на лампы</button>
+				<p class="muted small">Берет значения из формы, даже несохраненные. Пока захват идет, следующая смена экрана заменит цвет.</p>
+			</div>
 		</div>
 	</aside>
 </main>
 
+<dialog class="dialog" id="profile-dialog">
+	<form class="dialog-body" id="profile-dialog-form" method="dialog">
+		<h2 id="profile-dialog-title">Новый профиль</h2>
+		<label class="field">
+			<span class="field-label">Название</span>
+			<span class="input-wrap"><input autocomplete="off" id="profile-dialog-name" maxlength="40" required spellcheck="false" type="text"/></span>
+			<span class="field-hint">Например: Игры, Фильмы, Ночь.</span>
+		</label>
+		<label class="check" id="profile-dialog-copy-wrap"><input checked id="profile-dialog-copy" type="checkbox"/> <span id="profile-dialog-copy-text">Скопировать настройки текущего профиля</span></label>
+		<p class="field-error" hidden id="profile-dialog-error"></p>
+		<div class="dialog-actions">
+			<button class="button ghost" id="profile-dialog-cancel" type="button">Отмена</button>
+			<button class="button primary" id="profile-dialog-ok" type="submit">Создать</button>
+		</div>
+	</form>
+</dialog>
+
+<script id="settings-defaults" type="application/json" th:utext="${defaultsJson}">{}</script>
 <div th:replace="~{fragments/layout :: toast}"></div>
 <script src="/js/color.js"></script>
 <script src="/js/common.js"></script>

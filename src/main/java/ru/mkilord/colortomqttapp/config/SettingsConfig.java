@@ -5,15 +5,10 @@ import lombok.Setter;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Primary;
-import ru.mkilord.colortomqttapp.service.SettingsService;
-import ru.mkilord.colortomqttapp.service.impl.SettingsServiceImpl;
 
 import java.nio.file.Path;
 import java.util.Map;
-import java.util.Properties;
 
 import static lombok.AccessLevel.PRIVATE;
 
@@ -30,6 +25,12 @@ public class SettingsConfig {
     @Setter
     String settingsFile = "settings.txt";
 
+    /**
+     * Папка с профилями настроек, по файлу на профиль. Путь относительно рабочей директории.
+     */
+    @Setter
+    String profilesDir = "profiles";
+
     @Setter
     Map<String, String> defaultSettings;
 
@@ -37,9 +38,7 @@ public class SettingsConfig {
         return Path.of(settingsFile).toAbsolutePath().normalize();
     }
 
-    @Primary
-    @Bean
-    public Properties getProperties(SettingsService settingsService) {
-        return settingsService.loadOrElseLoadDefault();
+    public Path getProfilesDirPath() {
+        return Path.of(profilesDir).toAbsolutePath().normalize();
     }
 }

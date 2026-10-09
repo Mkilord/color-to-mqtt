@@ -110,6 +110,48 @@
         }
     });
 
+    // ---- Профили ----
+    const chips = el('profile-chips');
+
+    function renderProfiles(data) {
+        chips.replaceChildren(...data.profiles.map(name => {
+            const chip = document.createElement('button');
+            chip.type = 'button';
+            chip.className = 'profile-chip';
+            chip.dataset.profile = name;
+            chip.textContent = name;
+            chip.setAttribute('aria-pressed', String(name === data.active));
+            return chip;
+        }));
+        el('profile-edit').href = '/settings?profile=' + encodeURIComponent(data.active);
+    }
+
+    chips.addEventListener('click', async event => {
+        const chip = event.target.closest('[data-profile]');
+        if (!chip || chip.getAttribute('aria-pressed') === 'true' || chips.dataset.busy) {
+            return;
+        }
+        chips.dataset.busy = 'true';
+        try {
+            const response = await fetch('/api/profiles/activate', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({name: chip.dataset.profile})
+            });
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(data.error || 'HTTP ' + response.status);
+            }
+            renderProfiles(data);
+            showToast(running ? `Профиль «${data.active}», захват перезапущен` : `Профиль «${data.active}»`);
+            refresh();
+        } catch (e) {
+            showToast('Не удалось сменить профиль: ' + e.message, 'error');
+        } finally {
+            delete chips.dataset.busy;
+        }
+    });
+
     document.addEventListener('visibilitychange', () => {
         if (!document.hidden) {
             refresh();
